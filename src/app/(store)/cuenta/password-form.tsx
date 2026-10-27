@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Alert, Label } from "@/components/ui/primitives";
 import { changePasswordAction } from "@/app/actions/auth";
 
-/** Cambiar la contraseña, o crearla si la cuenta entró con Google o con código. */
+/** Cambiar la contraseña, o crearla si la cuenta entró con código. */
 export function PasswordForm({ hasPassword }: { hasPassword: boolean }) {
   const [state, action, pending] = useActionState(changePasswordAction, null);
   return (

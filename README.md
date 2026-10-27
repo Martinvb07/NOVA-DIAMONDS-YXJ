@@ -116,9 +116,8 @@ Reserva atómica de la unidad (`UPDATE … WHERE status = PUBLISHED`) por 20 min
 ### Acceso de clientes
 
 - **Código por correo** (pestaña por defecto en /ingresar): 6 dígitos, vence en 10 min, 5 intentos, un minuto entre envíos, solo se guarda su HMAC. Si el correo no tiene cuenta, se crea al verificar.
-- **Google** (OAuth 2.0 + OpenID Connect, PKCE, `state` y `nonce`, cookie temporal firmada). El botón aparece solo con `GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET`; la URI de redirección se muestra en Panel → Integraciones. Las cuentas del equipo no pueden entrar con Google ni con código.
-- **Contraseña** con verificación del correo por código al registrarse. Quien entró con Google o código puede crear una contraseña en Mi cuenta.
-- Al verificar el correo (código, Google o enlace de recuperación) las compras hechas como invitado con ese correo pasan a la cuenta.
+- **Contraseña** con verificación del correo por código al registrarse. Quien entró con código puede crear una contraseña en Mi cuenta.
+- Al verificar el correo (código o enlace de recuperación) las compras hechas como invitado con ese correo pasan a la cuenta.
 
 ### Correos
 
@@ -191,7 +190,7 @@ Mientras `PAYMENT_PROVIDER` esté vacío nadie puede comprar.
 
 ## 6. Producción
 
-La guía completa está en [DESPLIEGUE.md](DESPLIEGUE.md): servidor con Docker (`Dockerfile`, `deploy/`), variables, importación de la configuración (`npm run config:exportar` / `config:importar`), correos, Bold, RechargeGame, Google, tareas programadas, respaldos y monitoreo (`/api/health` y avisos de errores por correo).
+La guía completa está en [DESPLIEGUE.md](DESPLIEGUE.md): servidor con Docker (`Dockerfile`, `deploy/`), variables, importación de la configuración (`npm run config:exportar` / `config:importar`), correos, Bold, RechargeGame, tareas programadas, respaldos y monitoreo (`/api/health` y avisos de errores por correo).
 
 Antes de anunciar, `npm run verificar:produccion` debe terminar sin bloqueantes. Notas:
 - Usa **una sola instancia**: límites de intentos, presencia del chat y avisos agrupados viven en memoria. Si algún día necesitas varias réplicas, muévelos a Redis/Upstash.

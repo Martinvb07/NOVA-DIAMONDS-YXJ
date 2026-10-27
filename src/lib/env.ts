@@ -58,10 +58,6 @@ export const env = {
       pass: read("SMTP_PASS"),
     },
   },
-  google: {
-    clientId: read("GOOGLE_CLIENT_ID"),
-    clientSecret: read("GOOGLE_CLIENT_SECRET"),
-  },
   cronSecret: read("CRON_SECRET"),
   trustedIpHeader: read("TRUSTED_IP_HEADER")?.toLowerCase(),
   /** Ruta secreta de acceso al panel (sin barras). En producción es obligatoria: sin ella el panel queda inaccesible. */

@@ -4,8 +4,6 @@ import { redirect } from "next/navigation";
 import { Container } from "@/components/ui/primitives";
 import { getCurrentUser } from "@/lib/auth";
 import { AuthForm } from "../ingresar/auth-form";
-import { AuthDivider, GoogleButton } from "@/components/auth/google-button";
-import { googleEnabled } from "@/server/google-oauth";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Crear cuenta", robots: { index: false, follow: false } };
@@ -19,12 +17,6 @@ export default async function RegisterPage({ searchParams }: { searchParams: Pro
         <h1 className="font-display text-3xl font-semibold">Crear cuenta</h1>
         <p className="mt-2 text-sm text-fg-muted">Opcional. Tus compras quedan en tu historial y, al verificar tu correo, también las que hiciste como invitado.</p>
         <div className="surface mt-6 p-6">
-          {googleEnabled() && (
-            <>
-              <GoogleButton next={next} label="Registrarme con Google" />
-              <AuthDivider />
-            </>
-          )}
           <AuthForm mode="register" next={next} />
           <p className="mt-4 text-center text-[12.5px] text-fg-subtle">
             ¿Prefieres sin contraseña?{" "}

@@ -18,7 +18,7 @@ jobs:
           echo "ip=$(curl -s https://api.ipify.org)" >> "$GITHUB_OUTPUT"
           bloqueado=0
           for i in $(seq 1 130); do
-            c=$(curl -s -o /dev/null -w '%{http_code}' "https://novadiamondsyxj.com/api/search?q=diamantes")
+            c=$(curl -s -o /dev/null -w '%{http_code}' "https://nova.llanostudio.co/api/search?q=diamantes")
             [ "$c" = "429" ] && bloqueado=$((bloqueado + 1))
           done
           echo "Respuestas 429 en la máquina A: $bloqueado"
@@ -32,7 +32,7 @@ jobs:
       - run: |
           ipb=$(curl -s https://api.ipify.org)
           [ "$ipb" = "${{ needs.agotar.outputs.ip }}" ] && { echo "Misma IP en ambas máquinas; la prueba no sirve, repítela"; exit 0; }
-          c=$(curl -s -o /dev/null -w '%{http_code}' "https://novadiamondsyxj.com/api/search?q=diamantes")
+          c=$(curl -s -o /dev/null -w '%{http_code}' "https://nova.llanostudio.co/api/search?q=diamantes")
           if [ "$c" = "429" ]; then
             echo "✖ La máquina B quedó bloqueada sin haber buscado: la tienda ve a todos los visitantes con la misma IP."
             exit 1

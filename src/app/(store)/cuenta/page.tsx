@@ -60,7 +60,7 @@ export default async function AccountHome({ searchParams }: { searchParams: Prom
   const [account, orders, sessions, tickets, settings] = await Promise.all([
     db.user.findUniqueOrThrow({
       where: { id: user.id },
-      select: { name: true, email: true, createdAt: true, emailVerifiedAt: true, hasPassword: true, googleSub: true, avatarUrl: true, avatarPreset: true, phone: true, ffPlayerId: true, profileTheme: true },
+      select: { name: true, email: true, createdAt: true, emailVerifiedAt: true, hasPassword: true, avatarUrl: true, avatarPreset: true, phone: true, ffPlayerId: true, profileTheme: true },
     }),
     db.order.findMany({
       where: { userId: user.id },
@@ -409,7 +409,6 @@ export default async function AccountHome({ searchParams }: { searchParams: Prom
             <ul className="mt-4 divide-y divide-white/[0.06] text-[13.5px]">
               {[
                 { icon: Mail, l: "Código por correo", d: account.email, on: true, note: "Siempre disponible" },
-                { icon: BadgeCheck, l: "Google", d: account.googleSub ? "Cuenta vinculada" : "Entra una vez con «Continuar con Google» para vincularla", on: !!account.googleSub },
                 { icon: KeyRound, l: "Contraseña", d: account.hasPassword ? "Creada" : "Aún no tienes; puedes crearla aquí", on: account.hasPassword },
               ].map(({ icon: Icon, l, d, on, note }) => (
                 <li key={l} className="flex items-center gap-3 py-3">
@@ -448,7 +447,7 @@ export default async function AccountHome({ searchParams }: { searchParams: Prom
                 Eliminar mi cuenta
               </h2>
               <p className="mt-1 max-w-[640px] text-[13px] leading-relaxed text-fg-muted">
-                Borramos tu perfil, foto, ID de Free Fire guardado, sesiones y vínculo con Google. Tus pedidos se conservan sin cuenta asociada solo
+                Borramos tu perfil, foto, ID de Free Fire guardado, sesiones. Tus pedidos se conservan sin cuenta asociada solo
                 por obligación legal y contable, como explica la <a href="/legal/privacidad#supresion" className="underline underline-offset-2 hover:text-fg">política de privacidad</a>. Esta acción no se puede deshacer.
               </p>
               <div className="max-w-[420px]">

@@ -5,7 +5,6 @@ import { PAYMENT_PROVIDERS, getPaymentProvider } from "./payments";
 import { TOPUP_PROVIDERS, getTopUpProvider } from "./topup";
 import { storageMissingConfig, storageMode } from "../storage";
 import { emailReady, notificationsMissingConfig } from "../notifications";
-import { googleEnabled, googleMissingConfig, googleRedirectUri } from "../google-oauth";
 
 export type IntegrationCard = {
   key: string;
@@ -141,23 +140,6 @@ export async function getIntegrationOverview(): Promise<IntegrationCard[]> {
     ...st("notifications"),
   });
 
-  cards.push({
-    key: "google",
-    group: "Acceso",
-    name: "Iniciar sesión con Google",
-    selected: true,
-    active: googleEnabled(),
-    mode: googleEnabled() ? "Activo" : "Desactivado",
-    missing: googleMissingConfig(),
-    values: [
-      { name: "GOOGLE_CLIENT_ID", value: env.google.clientId ? `${env.google.clientId.slice(0, 12)}…` : null },
-      { name: "GOOGLE_CLIENT_SECRET", value: mask(env.google.clientSecret) },
-    ],
-    redirectUrl: googleRedirectUri(),
-    note: "Crea un «ID de cliente de OAuth» tipo Aplicación web en Google Cloud Console y registra esta URI de redirección exacta. El botón aparece solo cuando ambas variables existen.",
-    ...st("google"),
-  });
-
   return cards;
 }
 
@@ -173,8 +155,6 @@ export async function runHealthCheck(key: string): Promise<{ ok: boolean; messag
     result = storageMode() === "s3" ? { ok: true, message: "Variables completas (la prueba real ocurre al subir una imagen)." } : { ok: !isProduction, message: "Usando disco local." };
   } else if (key === "notifications") {
     result = emailReady() ? { ok: true, message: "Variables completas. Envía un correo de prueba en Panel → Correos." } : { ok: false, message: "Correo transaccional no configurado." };
-  } else if (key === "google") {
-    result = googleEnabled() ? { ok: true, message: "Variables completas. Prueba el botón en /ingresar." } : { ok: false, message: `Falta: ${googleMissingConfig().join(", ")}` };
   } else {
     return { ok: false, message: "Integración desconocida" };
   }

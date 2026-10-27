@@ -1,4 +1,4 @@
-# NOVA DIAMONDS en un VPS Ubuntu con PM2 + nginx (novadiamondsyxj.com)
+# NOVA DIAMONDS en un VPS Ubuntu con PM2 + nginx (nova.llanostudio.co)
 
 Alternativa a Docker (DESPLIEGUE.md). La tienda corre con PM2 en `127.0.0.1:3040`, nginx la publica con HTTPS y cada push a `main` se despliega solo con GitHub Actions (`.github/workflows/deploy.yml`).
 
@@ -64,17 +64,14 @@ Configuración de tu PC: `npm run config:exportar`, súbela con `scp -r exportac
 
 ## 5. DNS + nginx + HTTPS
 
-GoDaddy → DNS: `A @ → IP del VPS`, `CNAME www → novadiamondsyxj.com`. Luego:
+DNS de `llanostudio.co`: registro `A` con nombre `nova` → IP del VPS. Luego:
 
 ```bash
-sudo cp deploy/nginx-novadiamonds.conf /etc/nginx/sites-available/novadiamonds
-sudo ln -s /etc/nginx/sites-available/novadiamonds /etc/nginx/sites-enabled/
-sudo rm -f /etc/nginx/sites-enabled/default
-sudo nginx -t && sudo systemctl reload nginx
-sudo certbot --nginx -d novadiamondsyxj.com -d www.novadiamondsyxj.com --redirect
+cp deploy/nginx-nova.conf /etc/nginx/sites-available/nova-diamonds-yxj
+ln -sf /etc/nginx/sites-available/nova-diamonds-yxj /etc/nginx/sites-enabled/
+nginx -t && systemctl reload nginx
+certbot --nginx -d nova.llanostudio.co --redirect
 ```
-
-Sube el límite de subida en el bloque 443 que dejó certbot: `client_max_body_size 8m;` y `sudo systemctl reload nginx`.
 
 ## 6. Deploy automático (GitHub Actions)
 
@@ -121,7 +118,7 @@ Cada push a `main`: tipos + pruebas + build en CI → en el VPS `git reset`, `np
 crontab -e
 ```
 ```cron
-*/2 * * * * curl -fsS -m 50 -H "Authorization: Bearer TU_CRON_SECRET" https://novadiamondsyxj.com/api/cron/maintenance > /dev/null
+*/2 * * * * curl -fsS -m 50 -H "Authorization: Bearer TU_CRON_SECRET" https://nova.llanostudio.co/api/cron/maintenance > /dev/null
 30 3 * * * sh /var/www/llanostudio/sitios/nova-diamonds-yxj/deploy/respaldo-vps.sh >> /root/respaldo-nova.log 2>&1
 ```
 

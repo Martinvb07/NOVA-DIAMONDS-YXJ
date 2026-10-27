@@ -82,7 +82,7 @@ export async function logoutAction() {
   redirect("/");
 }
 
-/** Cambia la contraseña; si la cuenta entró con Google o código y no tiene, la crea sin pedir la actual. */
+/** Cambia la contraseña; si la cuenta entró con código y no tiene, la crea sin pedir la actual. */
 export async function changePasswordAction(_: FormState, form: FormData): Promise<FormState> {
   const user = await getCurrentUser();
   if (!user) return { error: "Sesión expirada." };

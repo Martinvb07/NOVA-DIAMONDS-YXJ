@@ -67,7 +67,6 @@ const uploadsDir = v("UPLOADS_DIR");
 check(s3 || (path.isAbsolute(uploadsDir) && !uploadsDir.replace(/\\/g, "/").includes("/public/")), "Imágenes en un bucket S3/R2 o en UPLOADS_DIR (disco persistente)");
 
 // --- Acceso
-check(!!v("GOOGLE_CLIENT_ID") && !!v("GOOGLE_CLIENT_SECRET"), "Ingreso con Google configurado", "warn");
 check(!v("SEED_ADMIN_PASSWORD"), "SEED_ADMIN_PASSWORD eliminada del servidor (solo se usa la primera vez)", "warn");
 
 // --- Datos (si la base responde)

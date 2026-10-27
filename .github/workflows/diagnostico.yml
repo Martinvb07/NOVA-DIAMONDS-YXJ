@@ -44,7 +44,7 @@ jobs:
           cd "$VPS_PATH"
           echo "== node $(node -v) | commit $(git rev-parse --short HEAD)"
           echo "== variables en .env (largo del valor):"
-          for v in NODE_ENV APP_URL AUTH_SECRET ADMIN_PATH DATABASE_URL DATA_ENCRYPTION_KEY GOOGLE_CLIENT_ID GOOGLE_CLIENT_SECRET TRUSTED_IP_HEADER; do
+          for v in NODE_ENV APP_URL AUTH_SECRET ADMIN_PATH DATABASE_URL DATA_ENCRYPTION_KEY TRUSTED_IP_HEADER; do
             linea=$(grep -E "^$v=" .env | tail -n1 || true)
             valor=${linea#*=}; valor=${valor%\"}; valor=${valor#\"}
             [ -n "$linea" ] && echo "  $v: ${#valor}" || echo "  $v: (falta)"
@@ -67,9 +67,6 @@ jobs:
             curl -s --max-time 10 -H "Authorization: Bearer $rk" https://api.resend.com/domains \
               | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{const j=JSON.parse(s);for(const d of j.data??[])console.log(" ",d.name,d.status,d.region??"");if(!j.data)console.log("  respuesta:",j.message??s.slice(0,200))}catch{console.log("  respuesta no válida")}})' || true
           fi
-          echo "== inicio con Google"
-          curl -s -o /dev/null -w '%{redirect_url}\n' -H "Host: novadiamondsyxj.com" -H "X-Forwarded-Proto: https" http://127.0.0.1:3040/api/auth/google \
-            | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{const u=new URL(s.trim());const p=u.searchParams;console.log("  destino:",u.origin+u.pathname);console.log("  redirect_uri:",p.get("redirect_uri"));console.log("  client_id termina en:",(p.get("client_id")||"").split("-")[0].slice(-4),"…",(p.get("client_id")||"").split(".").slice(-3).join("."))}catch{console.log("  sin redirección:",s.slice(0,120))}})' || true
           echo "== ajustes de correo en la base"
           node --env-file=.env -e 'const {PrismaClient}=require("@prisma/client");const db=new PrismaClient();db.setting.findMany({where:{key:{in:["supportEmail","staffAlertEmail"]}}}).then(r=>{for(const s of r)console.log(" ",s.key,"vacío="+(!s.value),"anterior="+/storevancolombia/.test(s.value));return db.$disconnect()})' || true
           echo "== códigos promocionales (código tapado)"
@@ -102,7 +99,7 @@ jobs:
           pm2 jlist 2>/dev/null | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{for(const p of JSON.parse(s))console.log(" ",p.name,p.pm2_env.status,"reinicios:",p.pm2_env.restart_time)})' || true
           echo "== prueba local de la entrada"
           a=$(grep -E '^ADMIN_PATH=' .env | tail -n1 | cut -d= -f2- | tr -d '"')
-          curl -s -o /dev/null -w "  /<ADMIN_PATH> -> %{http_code}\n" -H "Host: novadiamondsyxj.com" -H "X-Forwarded-Proto: https" "http://127.0.0.1:3040/$a"
+          curl -s -o /dev/null -w "  /<ADMIN_PATH> -> %{http_code}\n" -H "Host: nova.llanostudio.co" -H "X-Forwarded-Proto: https" "http://127.0.0.1:3040/$a"
           sleep 2
           echo "== últimos errores de la tienda (también de reinicios anteriores)"
           for f in $(ls -t logs/nova.err*.log 2>/dev/null | head -n 4); do

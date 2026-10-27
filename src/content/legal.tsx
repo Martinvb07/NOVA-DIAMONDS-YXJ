@@ -143,7 +143,6 @@ export const LEGAL: Record<string, LegalDoc> = {
           <li><strong>Bold</strong> (pasarela de pagos, Colombia): monto, número de pedido y los datos que ingreses en su plataforma para pagar.</li>
           <li><strong>Proveedor de recargas</strong>: el ID de jugador y el paquete, para acreditar los diamantes.</li>
           <li><strong>Resend</strong> (envío de correos, Estados Unidos): tu correo y el contenido del mensaje.</li>
-          <li><strong>Google</strong> (solo si eliges «Continuar con Google»): Google nos confirma tu correo y nombre; no recibimos tu contraseña.</li>
           <li><strong>Proveedor de hosting</strong>: aloja el servidor y la base de datos de la tienda.</li>
         </ul>
         <p>
@@ -166,7 +165,7 @@ export const LEGAL: Record<string, LegalDoc> = {
         <h2 id="supresion">Eliminar tu cuenta</h2>
         <p>
           Desde <a href="/cuenta?seccion=seguridad">Mi cuenta → Seguridad</a> puedes eliminar tu cuenta tú mismo: borramos tu perfil, foto, ID de jugador
-          guardado, sesiones y vínculo con Google al instante. Tus pedidos quedan sin cuenta asociada y se conservan solo por el deber legal de
+          guardado, y sesiones al instante. Tus pedidos quedan sin cuenta asociada y se conservan solo por el deber legal de
           guardar soportes contables. Si compraste sin cuenta, pide la supresión por el centro de ayuda.
         </p>
         <h2 id="menores">Menores de edad</h2>
@@ -200,7 +199,6 @@ export const LEGAL: Record<string, LegalDoc> = {
         <ul>
           <li>Mantener tu sesión iniciada si entras a tu cuenta.</li>
           <li>Recordar lo que tienes en el carrito.</li>
-          <li>Proteger el inicio de sesión con Google.</li>
           <li>Recordar que ya viste el aviso de cookies, para no mostrártelo otra vez.</li>
         </ul>
         <p>Como son indispensables, no necesitamos pedirte que las aceptes; igual te lo contamos la primera vez que entras.</p>

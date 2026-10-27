@@ -112,7 +112,7 @@ export async function setProfileThemeAction(theme: string): Promise<State> {
 
 /**
  * Supresión de datos (Ley 1581 de 2012): el cliente elimina su cuenta. Se borran perfil, sesiones, foto,
- * ID de Free Fire guardado y vínculo con Google. Los pedidos y solicitudes quedan sin cuenta asociada y se
+ * ID de Free Fire guardado. Los pedidos y solicitudes quedan sin cuenta asociada y se
  * conservan solo por obligación legal y contable (Código de Comercio, art. 60), como explica la política.
  */
 export async function deleteMyAccountAction(_: State, form: FormData): Promise<State> {

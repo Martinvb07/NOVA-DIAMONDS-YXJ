@@ -1,5 +1,5 @@
 // PM2: mantiene la tienda NOVA DIAMONDS encendida en el VPS y la reinicia si se cae.
-//   nova  ->  Next.js en 127.0.0.1:3040  (nginx la publica en https://novadiamondsyxj.com)
+//   nova  ->  Next.js en 127.0.0.1:3040  (nginx la publica en https://nova.llanostudio.co)
 // Arrancar:  pm2 start deploy/ecosystem.config.js && pm2 save
 // Las variables (DATABASE_URL, llaves, etc.) se leen de .env en la raíz del proyecto: Next.js y Prisma lo cargan solos.
 const path = require("path");
