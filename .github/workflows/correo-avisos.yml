@@ -59,7 +59,7 @@ jobs:
           chmod 600 .env
           pm2 restart nova >/dev/null
           for i in $(seq 1 25); do
-            [ "$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 http://127.0.0.1:3020/api/health || true)" = "200" ] && { echo "ALERT_EMAIL actualizado; tienda en línea."; exit 0; }
+            [ "$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 http://127.0.0.1:3040/api/health || true)" = "200" ] && { echo "ALERT_EMAIL actualizado; tienda en línea."; exit 0; }
             sleep 3
           done
           echo "!! La tienda no respondió tras reiniciar"; exit 1

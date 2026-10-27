@@ -55,7 +55,7 @@ jobs:
           if [ -d "$d" ]; then echo "  último respaldo: $(ls -t "$d" 2>/dev/null | head -n1 | sed 's/[^0-9-]//g' || echo ninguno) · copias: $(ls "$d" | wc -l)"; else echo "  ✖ no existe la carpeta de respaldos"; fi
           if grep -qE '^CRON_SECRET=.{24,}' .env; then
             s=$(grep -E '^CRON_SECRET=' .env | tail -n1 | cut -d= -f2- | tr -d '"')
-            r=$(curl -s --max-time 60 -H "Authorization: Bearer $s" -H "Host: novadiamondsyxj.com" -H "X-Forwarded-Proto: https" http://127.0.0.1:3020/api/cron/maintenance || true)
+            r=$(curl -s --max-time 60 -H "Authorization: Bearer $s" -H "Host: novadiamondsyxj.com" -H "X-Forwarded-Proto: https" http://127.0.0.1:3040/api/cron/maintenance || true)
             echo "  prueba de mantenimiento: $(printf '%s' "$r" | head -c 200)"
           fi
           echo "== nginx (cabeceras hacia la tienda)"
@@ -125,6 +125,6 @@ jobs:
           echo | openssl s_client -servername novadiamondsyxj.com -connect novadiamondsyxj.com:443 2>/dev/null | openssl x509 -noout -enddate | sed 's/^/  /'
           for v in tls1 tls1_1; do echo | openssl s_client -$v -servername novadiamondsyxj.com -connect novadiamondsyxj.com:443 >/dev/null 2>&1 && echo "  ⚠ acepta $v (viejo)" || echo "  ✔ rechaza $v"; done
           echo "== puertos internos desde fuera (deben estar cerrados)"
-          for port in 3020 3306 3001 3000 6379 5432 8080; do
+          for port in 3040 3306 3001 3000 6379 5432 8080; do
             timeout 6 bash -c "echo > /dev/tcp/$VPS_HOST/$port" 2>/dev/null && echo "  ⚠ $port ABIERTO" || echo "  ✔ $port cerrado"
           done
