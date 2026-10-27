@@ -12,6 +12,7 @@ import { replyTicketAction, ticketAction } from "@/app/actions/admin";
 import { notificationsMissingConfig } from "@/server/notifications";
 import { env } from "@/lib/env";
 import { topicLabel } from "@/domain/support";
+import { Select } from "@/components/ui/select";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Soporte" };
@@ -164,13 +165,13 @@ export default async function SupportAdmin({ searchParams }: { searchParams: Pro
                     )}
                     <ActionForm action={ticketAction} hideMessage className="flex items-center gap-1.5">
                       <input type="hidden" name="id" value={t.id} />
-                      <select name="status" defaultValue={t.status} className="field h-8 w-auto py-1 text-[12.5px]" aria-label="Estado">
+                      <Select name="status" defaultValue={t.status} className="field h-8 w-auto py-1 text-[12.5px]" aria-label="Estado">
                         {Object.entries(META).map(([k, v]) => (
                           <option key={k} value={k}>
                             {v.l}
                           </option>
                         ))}
-                      </select>
+                      </Select>
                       <SubmitButton size="sm" variant="ghost">
                         Guardar
                       </SubmitButton>

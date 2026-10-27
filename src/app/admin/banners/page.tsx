@@ -8,6 +8,7 @@ import { requireAdmin } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { bannerAction, uploadBannerAction } from "@/app/actions/admin";
 import { BANNER_SLOTS } from "@/domain/banner-slots";
+import { Select } from "@/components/ui/select";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Banners" };
@@ -39,13 +40,13 @@ function BannerCard({ b, i, total, ratio }: { b: PromoBanner; i: number; total: 
           {/* En celular: enlace en su propia fila; ubicación y Guardar debajo. */}
           <div className="flex flex-wrap gap-2 sm:flex-nowrap">
             <input name="href" defaultValue={b.href ?? ""} placeholder="Sin enlace" className="field h-9 w-full min-w-0 text-[13px] sm:w-auto sm:flex-1" aria-label="Enlace" />
-            <select name="placement" defaultValue={b.placement} className="field h-9 min-w-0 flex-1 py-1 text-[12.5px] sm:w-[150px] sm:flex-none" aria-label="Ubicación">
+            <Select name="placement" defaultValue={b.placement} className="field h-9 min-w-0 flex-1 py-1 text-[12.5px] sm:w-[150px] sm:flex-none" aria-label="Ubicación">
               {PLACEMENTS.map((p) => (
                 <option key={p.v} value={p.v}>
                   {p.label}
                 </option>
               ))}
-            </select>
+            </Select>
             <SubmitButton size="sm" variant="secondary">
               Guardar
             </SubmitButton>
@@ -154,13 +155,13 @@ export default async function BannersAdmin() {
               <input name="href" placeholder="/recargas" className="field" />
             </Field>
             <Field label="Ubicación">
-              <select name="placement" defaultValue="TOP" className="field">
+              <Select name="placement" defaultValue="TOP" className="field">
                 {PLACEMENTS.map((p) => (
                   <option key={p.v} value={p.v}>
                     {p.label}
                   </option>
                 ))}
-              </select>
+              </Select>
             </Field>
             <SubmitButton size="sm">Subir</SubmitButton>
           </div>

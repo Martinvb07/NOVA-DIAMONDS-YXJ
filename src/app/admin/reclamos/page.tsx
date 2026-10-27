@@ -7,6 +7,7 @@ import { requireStaff } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { formatDate } from "@/lib/money";
 import { claimAction } from "@/app/actions/admin";
+import { Select } from "@/components/ui/select";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Reclamos" };
@@ -66,10 +67,10 @@ export default async function ClaimsAdmin() {
                     <ActionForm action={claimAction} className="flex flex-1 flex-wrap items-start gap-2">
                       <input type="hidden" name="id" value={c.id} />
                       <input name="resolution" placeholder="Resolución (se guarda en el registro)" className="field h-8 min-w-[220px] flex-1 py-1 text-[13px]" />
-                      <select name="op" className="field h-8 w-auto py-1 text-[13px]" defaultValue="uphold">
+                      <Select name="op" className="field h-8 w-auto py-1 text-[13px]" defaultValue="uphold">
                         <option value="uphold">Procedente → retirar publicación</option>
                         <option value="dismiss">Descartar reclamación</option>
-                      </select>
+                      </Select>
                       <ConfirmSubmit confirmText="Confirmar resolución">Resolver</ConfirmSubmit>
                     </ActionForm>
                   </div>

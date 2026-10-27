@@ -8,6 +8,7 @@
 @theme {
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-display: var(--font-sora), var(--font-inter), ui-sans-serif, sans-serif;
+  --font-brand: var(--font-orbitron), var(--font-sora), ui-sans-serif, sans-serif;
   --font-mono: var(--font-mono-face), ui-monospace, "SFMono-Regular", monospace;
 
   --color-ink-950: #04060c;
@@ -52,6 +53,9 @@
   --animate-pop-in: pop-in 0.18s cubic-bezier(0.2, 0.8, 0.2, 1) both;
   --animate-pop-out: pop-out 0.14s ease-in both;
   --animate-feed-in: feed-in 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  --animate-page-in: page-in 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-bump: bump 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
 
   @keyframes fade-up {
     from { opacity: 0; transform: translateY(8px); }
@@ -93,6 +97,15 @@
     from { transform: translateX(48px); opacity: 0; }
     to { transform: none; opacity: 1; }
   }
+  @keyframes page-in {
+    from { opacity: 0; transform: translate3d(0, 18px, 0); filter: blur(6px); }
+    to { opacity: 1; transform: none; filter: none; }
+  }
+  @keyframes bump {
+    0% { transform: scale(0.4); }
+    60% { transform: scale(1.18); }
+    100% { transform: scale(1); }
+  }
   @keyframes streak {
     0% { transform: translateX(-120%); opacity: 0; }
     20% { opacity: 1; }
@@ -119,6 +132,8 @@
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
   }
+  /* Casillas, radios y deslizadores nativos con el azul de la marca */
+  input, progress { accent-color: var(--color-nova-400); }
   ::selection {
     background: var(--color-nova-400);
     color: var(--color-nova-ink);
@@ -276,20 +291,41 @@
   body:has([aria-label="Chat de entrega"]) .wa-float { display: none; }
 }
 
-/* Scroll fino con los colores de la tienda (listas de los filtros y paneles). */
-.scroll-thin {
-  scrollbar-width: thin;
-  scrollbar-color: rgb(255 255 255 / 0.14) transparent;
+/* Barras de scroll de toda la tienda: finas, redondeadas, sin carril; se iluminan en azul neón al agarrarlas. */
+:root {
+  --barra: rgb(255 255 255 / 0.16);
+  --barra-encima: rgb(255 255 255 / 0.32);
+  --barra-activa: var(--color-nova-400);
 }
-.scroll-thin::-webkit-scrollbar { width: 8px; height: 8px; }
-.scroll-thin::-webkit-scrollbar-track { background: transparent; }
-.scroll-thin::-webkit-scrollbar-thumb {
-  background: rgb(255 255 255 / 0.14);
-  border: 2px solid transparent;
+@supports not selector(::-webkit-scrollbar) {
+  * { scrollbar-width: thin; scrollbar-color: var(--barra) transparent; }
+}
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-corner { background: transparent; }
+::-webkit-scrollbar-thumb {
+  border: 3px solid transparent;
   border-radius: 999px;
-  background-clip: padding-box;
+  background: var(--barra) padding-box;
 }
-.scroll-thin::-webkit-scrollbar-thumb:hover { background-color: var(--color-nova-500); }
+::-webkit-scrollbar-thumb:hover { background: var(--barra-encima) padding-box; }
+::-webkit-scrollbar-thumb:active { background: var(--barra-activa) padding-box; box-shadow: 0 0 8px rgb(41 168 255 / 0.8); }
+/* Compatibilidad: listas que ya usaban la clase. */
+.scroll-thin { overscroll-behavior: contain; }
+
+/* Brillo que cruza el botón al pasar el mouse (botones principales y CTA). */
+.btn-shine { position: relative; overflow: hidden; isolation: isolate; }
+.btn-shine::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  transform: translateX(-110%) skewX(-18deg);
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.45), transparent);
+  transition: transform 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+}
+.btn-shine:hover::after { transform: translateX(110%) skewX(-18deg); }
 
 /* Tablas del panel en celular: cada fila es una tarjeta y cada celda muestra el título de su columna
    (data-label lo pone ResponsiveTable). La primera celda hace de encabezado de la tarjeta. */

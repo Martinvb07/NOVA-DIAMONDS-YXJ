@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { SUPPORT_TOPICS } from "@/domain/support";
 import { createAccountTicketAction, replyAccountTicketAction, resolveAccountTicketAction } from "@/app/actions/support";
 import { DataNotice } from "@/components/legal/data-notice";
+import { Select } from "@/components/ui/select";
 
 export type OrderOption = { id: string; label: string };
 
@@ -51,14 +52,14 @@ export function NewTicketForm({ orders, email }: { orders: OrderOption[]; email:
           <span className="mb-1.5 block text-[13px] font-medium">
             Pedido relacionado <span className="font-normal text-fg-subtle">(opcional)</span>
           </span>
-          <select name="orderId" defaultValue="" className="field h-10 text-[13.5px]">
+          <Select name="orderId" defaultValue="" className="field h-10 text-[13.5px]">
             <option value="">Ninguno</option>
             {orders.map((o) => (
               <option key={o.id} value={o.id}>
                 {o.label}
               </option>
             ))}
-          </select>
+          </Select>
         </label>
       )}
       <label className="block">

@@ -9,6 +9,7 @@ import { orderWhere, type OrderFilterParams } from "@/server/admin-filters";
 import { requireStaff } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { formatDate, formatMoney } from "@/lib/money";
+import { Select } from "@/components/ui/select";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Pedidos" };
@@ -47,19 +48,19 @@ export default async function OrdersPage({ searchParams }: { searchParams: Promi
       />
       <form method="get" className="mb-4 flex flex-wrap items-center gap-2">
         <input name="q" defaultValue={q} placeholder="Número, correo o ID de jugador" className="field sm:w-auto sm:min-w-[220px] sm:flex-1" aria-label="Buscar pedidos" />
-        <select name="estado" defaultValue={sp.estado ?? ""} className="field sm:w-[180px]" aria-label="Estado">
+        <Select name="estado" defaultValue={sp.estado ?? ""} className="field sm:w-[180px]" aria-label="Estado">
           <option value="">Todos los estados</option>
           {ORDER_STATUSES.map((s) => (
             <option key={s} value={s}>
               {ORDER_STATUS_META[s].label}
             </option>
           ))}
-        </select>
-        <select name="tipo" defaultValue={sp.tipo ?? ""} className="field sm:w-[165px]" aria-label="Tipo">
+        </Select>
+        <Select name="tipo" defaultValue={sp.tipo ?? ""} className="field sm:w-[165px]" aria-label="Tipo">
           <option value="">Todos los tipos</option>
           <option value="TOPUP">Recargas</option>
           <option value="ACCOUNT">Cuentas</option>
-        </select>
+        </Select>
         <input type="date" name="desde" defaultValue={sp.desde} className="field sm:w-[150px]" aria-label="Desde" title="Desde" />
         <input type="date" name="hasta" defaultValue={sp.hasta} className="field sm:w-[150px]" aria-label="Hasta" title="Hasta" />
         <label className="flex items-center gap-2 px-1 text-[13px] text-fg-muted">

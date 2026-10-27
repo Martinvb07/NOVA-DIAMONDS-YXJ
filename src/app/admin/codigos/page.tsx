@@ -6,6 +6,7 @@ import { requireAdmin } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { formatDate, formatMoney } from "@/lib/money";
 import { promoCodeAction, savePromoCodeAction } from "@/app/actions/admin";
+import { Select } from "@/components/ui/select";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Descuentos" };
@@ -102,10 +103,10 @@ function PromoForm({ p }: { p?: PromoCode }) {
           <input name="code" required minLength={4} maxLength={32} defaultValue={p?.code} className="field font-mono uppercase tracking-wider" autoComplete="off" />
         </Field>
         <Field label="Tipo">
-          <select name="discountType" defaultValue={p?.discountType ?? "PERCENT"} className="field">
+          <Select name="discountType" defaultValue={p?.discountType ?? "PERCENT"} className="field">
             <option value="PERCENT">Porcentaje (%)</option>
             <option value="FIXED">Valor fijo (COP)</option>
-          </select>
+          </Select>
         </Field>
         <Field label="Valor" hint="% (1–90) o pesos">
           <input name="value" type="number" min={1} required defaultValue={p?.value} className="field" />
@@ -114,11 +115,11 @@ function PromoForm({ p }: { p?: PromoCode }) {
           <input name="maxDiscount" type="number" min={0} step={100} defaultValue={p?.maxDiscount ?? ""} className="field" />
         </Field>
         <Field label="Aplica a">
-          <select name="scope" defaultValue={p?.scope ?? "ALL"} className="field">
+          <Select name="scope" defaultValue={p?.scope ?? "ALL"} className="field">
             <option value="ALL">Recargas y cuentas</option>
             <option value="TOPUP">Solo recargas</option>
             <option value="ACCOUNT">Solo cuentas</option>
-          </select>
+          </Select>
         </Field>
         <Field label="Compra mínima (opcional)">
           <input name="minSubtotal" type="number" min={0} step={100} defaultValue={p?.minSubtotal ?? ""} className="field" />

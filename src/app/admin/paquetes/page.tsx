@@ -14,6 +14,7 @@ import { costInCop, marginOf, parseRegionList, regionFlag, regionLabel } from "@
 import { TopupRegionFlag } from "@/components/brand/topup-region-flag";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import { Select } from "@/components/ui/select";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Diamantes y precios" };
@@ -175,19 +176,19 @@ function PackageForm({ pkg, region, products, usdtCop }: { pkg?: DiamondPackage;
           <input name="compareAtPrice" type="number" min={0} step={1} defaultValue={pkg?.compareAtPrice ?? ""} className="field" />
         </Field>
         <Field label="Etiqueta">
-          <select name="label" defaultValue={pkg?.label ?? "NONE"} className="field">
+          <Select name="label" defaultValue={pkg?.label ?? "NONE"} className="field">
             {Object.entries(PRODUCT_LABELS).map(([k, v]) => (
               <option key={k} value={k}>
                 {v ?? "Sin etiqueta"}
               </option>
             ))}
-          </select>
+          </Select>
         </Field>
         <Field label="Orden">
           <input name="sortOrder" type="number" min={0} defaultValue={pkg?.sortOrder ?? 0} className="field" />
         </Field>
         <Field label="Producto del proveedor" hint="Lo que se compra al proveedor cuando pagan este paquete. Debe ser la misma cantidad total de diamantes." className="lg:col-span-2">
-          <select name="providerSku" defaultValue={pkg?.providerSku ?? ""} className="field">
+          <Select name="providerSku" defaultValue={pkg?.providerSku ?? ""} className="field">
             <option value="">— Sin vincular (no se puede comprar) —</option>
             {pkg?.providerSku && !products.some((p) => p.productKey === pkg.providerSku) && <option value={pkg.providerSku}>{pkg.providerSku}</option>}
             {products.map((p) => (
@@ -195,7 +196,7 @@ function PackageForm({ pkg, region, products, usdtCop }: { pkg?: DiamondPackage;
                 {p.name} · {(p.priceCents / 100).toFixed(2)} USDT (≈ {formatMoney(costInCop(p.priceCents, usdtCop))})
               </option>
             ))}
-          </select>
+          </Select>
         </Field>
       </div>
       <div className="mt-4 flex flex-wrap gap-x-6 gap-y-3">

@@ -16,6 +16,7 @@ import { chatState, listMessages, markRead } from "@/server/chat";
 import { getSettings } from "@/server/settings";
 import { refreshDeliveryIfStale } from "@/server/orders";
 import { regionLabel } from "@/domain/topup-regions";
+import { Select } from "@/components/ui/select";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Pedido" };
@@ -203,13 +204,13 @@ export default async function OrderDetail({ params }: { params: Promise<{ id: st
                   <input type="hidden" name="orderId" value={order.id} />
                   <input type="hidden" name="op" value="transition" />
                   <p className="mb-2 text-[13px] font-medium">Cambiar estado</p>
-                  <select name="to" className="field mb-2 text-[13px]" defaultValue={transitions[0]}>
+                  <Select name="to" className="field mb-2 text-[13px]" defaultValue={transitions[0]}>
                     {transitions.map((t) => (
                       <option key={t} value={t}>
                         {ORDER_STATUS_META[t].label}
                       </option>
                     ))}
-                  </select>
+                  </Select>
                   <input name="reason" required placeholder="Motivo (queda en el historial)" className="field mb-2 text-[13px]" />
                   {transitions.includes("REFUNDED") && <p className="mb-2 text-[11.5px] text-fg-subtle">Marca como reembolsado solo después de ejecutar la devolución en la pasarela.</p>}
                   <ConfirmSubmit confirmText="Confirmar cambio">Aplicar</ConfirmSubmit>

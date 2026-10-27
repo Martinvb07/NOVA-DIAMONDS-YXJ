@@ -5,6 +5,7 @@ import { getSettings } from "@/server/settings";
 import { db } from "@/lib/db";
 import { saveSettingsAction } from "@/app/actions/admin";
 import { PAYMENT_METHODS, parsePaymentMethods } from "@/domain/payment-methods";
+import { Select } from "@/components/ui/select";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Ajustes de la tienda" };
@@ -90,11 +91,11 @@ export default async function SettingsAdmin() {
             Controla si la tienda muestra la venta de cuentas (menú, inicio, buscador y catálogo). Ahora hay {publicAccounts} cuenta(s) publicada(s).
           </p>
           <Field label="Mostrar la sección de cuentas" hint="En «Automático» aparece sola cuando publicas la primera cuenta; así nunca se ve un catálogo vacío.">
-            <select name="accountsMode" defaultValue={s.accountsMode || "auto"} className="field">
+            <Select name="accountsMode" defaultValue={s.accountsMode || "auto"} className="field">
               <option value="auto">Automático (solo si hay cuentas publicadas)</option>
               <option value="on">Siempre</option>
               <option value="off">Nunca (solo diamantes)</option>
-            </select>
+            </Select>
           </Field>
         </Panel>
 

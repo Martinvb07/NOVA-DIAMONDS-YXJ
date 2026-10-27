@@ -5,6 +5,7 @@ import { requireAdmin } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { formatDate } from "@/lib/money";
 import { createStaffAction, userAction } from "@/app/actions/admin";
+import { Select } from "@/components/ui/select";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Equipo" };
@@ -61,13 +62,13 @@ export default async function UsersAdmin({ searchParams }: { searchParams: Promi
                     <ActionForm action={userAction} className="flex items-center gap-1.5">
                       <input type="hidden" name="id" value={u.id} />
                       <input type="hidden" name="op" value="role" />
-                      <select name="role" defaultValue={u.role} aria-label={`Rol de ${u.email}`} className="field h-8 w-auto py-1 text-[12.5px]">
+                      <Select name="role" defaultValue={u.role} aria-label={`Rol de ${u.email}`} className="field h-8 w-auto py-1 text-[12.5px]">
                         {Object.entries(ROLE).map(([k, v]) => (
                           <option key={k} value={k}>
                             {v}
                           </option>
                         ))}
-                      </select>
+                      </Select>
                       <SubmitButton size="sm" variant="secondary">
                         Cambiar
                       </SubmitButton>
@@ -105,10 +106,10 @@ export default async function UsersAdmin({ searchParams }: { searchParams: Promi
               <input name="password" type="password" required minLength={10} autoComplete="new-password" className="field" />
             </Field>
             <Field label="Rol">
-              <select name="role" defaultValue="SUPPORT" className="field">
+              <Select name="role" defaultValue="SUPPORT" className="field">
                 <option value="SUPPORT">Soporte</option>
                 <option value="ADMIN">Administrador</option>
-              </select>
+              </Select>
             </Field>
           </div>
           <div className="mt-4">

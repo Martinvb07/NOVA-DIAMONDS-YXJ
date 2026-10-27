@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, JetBrains_Mono, Sora } from "next/font/google";
+import { Inter, JetBrains_Mono, Orbitron, Sora } from "next/font/google";
 import { headers } from "next/headers";
 import "./globals.css";
 import { Suspense } from "react";
@@ -11,6 +11,7 @@ import { env } from "@/lib/env";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
 const sora = Sora({ subsets: ["latin"], variable: "--font-sora", display: "swap", weight: ["400", "500", "600", "700"] });
+const brand = Orbitron({ subsets: ["latin"], variable: "--font-orbitron", display: "swap", weight: ["700", "800", "900"] });
 const mono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono-face", display: "swap", weight: ["400", "500", "600"] });
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -56,7 +57,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const nonce = (await headers()).get("x-nonce") ?? undefined;
   return (
     // suppressHydrationWarning: extensiones como Grammarly o ColorZilla agregan atributos a <html>/<body>.
-    <html lang="es-CO" className={`${inter.variable} ${sora.variable} ${mono.variable}`} suppressHydrationWarning>
+    <html lang="es-CO" className={`${inter.variable} ${sora.variable} ${brand.variable} ${mono.variable}`} suppressHydrationWarning>
       <head>
         <script nonce={nonce} suppressHydrationWarning dangerouslySetInnerHTML={{ __html: STRIP_EXTENSION_ATTRS }} />
       </head>

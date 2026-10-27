@@ -15,6 +15,7 @@ import { FF_RANKS, FF_REGIONS } from "@/domain/freefire";
 import { EmailStatusPicker } from "@/components/admin/email-status-picker";
 import { deleteAccountAction, imageAction, saveAccountAction, setListingStatusAction } from "@/app/actions/admin";
 import { ImagePicker } from "@/components/admin/image-picker";
+import { Select } from "@/components/ui/select";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Cuenta" };
@@ -232,35 +233,35 @@ function AccountForm({ a, tags, imagesCount }: { a: AccountListing | null; tags:
               <input name="chestsCount" type="number" min={0} defaultValue={a?.chestsCount ?? ""} className="field" />
             </Field>
             <Field label="Rango (si aplica)">
-              <select name="rank" defaultValue={a?.rank ?? ""} className="field">
+              <Select name="rank" defaultValue={a?.rank ?? ""} className="field">
                 <option value="">Sin rango</option>
                 {FF_RANKS.map((r) => (
                   <option key={r.id} value={r.id}>
                     {r.label}
                   </option>
                 ))}
-              </select>
+              </Select>
             </Field>
             <Field label="Correo de la cuenta" className="sm:col-span-2">
               <EmailStatusPicker defaultValue={a?.emailStatus ?? ""} />
             </Field>
             <Field label="Servidor">
-              <select name="region" defaultValue={a?.region ?? "LATAM"} className="field">
+              <Select name="region" defaultValue={a?.region ?? "LATAM"} className="field">
                 {FF_REGIONS.map((r) => (
                   <option key={r.code} value={r.code}>
                     {r.label} ({r.code})
                   </option>
                 ))}
-              </select>
+              </Select>
             </Field>
             <Field label="Etiqueta">
-              <select name="label" defaultValue={a?.label ?? "NONE"} className="field">
+              <Select name="label" defaultValue={a?.label ?? "NONE"} className="field">
                 {Object.entries(PRODUCT_LABELS).map(([k, v]) => (
                   <option key={k} value={k}>
                     {v ?? "Sin etiqueta"}
                   </option>
                 ))}
-              </select>
+              </Select>
             </Field>
             <Field label="Características" hint="Separadas por comas. Se usan como filtros." className="sm:col-span-2">
               <input name="tags" defaultValue={tags.join(", ")} placeholder="Pase élite, Mascotas" className="field" />
