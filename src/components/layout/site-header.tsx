@@ -44,7 +44,6 @@ export function SiteHeader({ storeName, logoUrl, user, showAccounts = true }: Pr
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const searchRef = useRef<HTMLInputElement>(null);
   const mobileSearchRef = useRef<HTMLInputElement>(null);
   const headerRef = useRef<HTMLElement>(null);
   const [menuTop, setMenuTop] = useState(68);
@@ -105,7 +104,6 @@ export function SiteHeader({ storeName, logoUrl, user, showAccounts = true }: Pr
     const onChange = () => {
       if (mq.matches) {
         setOpen(false);
-        setSearchOpen(false);
       }
     };
     mq.addEventListener("change", onChange);
@@ -120,11 +118,8 @@ export function SiteHeader({ storeName, logoUrl, user, showAccounts = true }: Pr
       }
       if (e.key === "/" && !(e.target as HTMLElement)?.closest("input,textarea,select")) {
         e.preventDefault();
-        if (window.matchMedia("(min-width: 1536px)").matches) searchRef.current?.focus();
-        else {
-          setOpen(false);
-          setSearchOpen(true);
-        }
+        setOpen(false);
+        setSearchOpen(true);
       }
     };
     window.addEventListener("keydown", onKey);
@@ -193,8 +188,8 @@ export function SiteHeader({ storeName, logoUrl, user, showAccounts = true }: Pr
         </div>
       </div>
 
-      <div className="mx-auto grid h-[64px] max-w-[1240px] grid-cols-[auto_1fr_auto] items-center gap-3 px-4 sm:h-[72px] sm:px-6 lg:h-[76px] lg:px-8">
-        <Link href="/" className="-ml-1 shrink-0 rounded-xl" aria-label={`${storeName} — inicio`}>
+      <div className="mx-auto flex h-[64px] max-w-[1240px] items-center gap-3 px-4 sm:h-[72px] sm:px-6 lg:h-[76px] lg:gap-5 lg:px-8">
+        <Link href="/" className="-ml-1 shrink-0 rounded-xl lg:mr-auto" aria-label={`${storeName} — inicio`}>
           <Logo name={storeName} logoUrl={logoUrl} />
         </Link>
 
@@ -203,7 +198,7 @@ export function SiteHeader({ storeName, logoUrl, user, showAccounts = true }: Pr
           ref={navRef}
           aria-label="Principal"
           onMouseLeave={toActive}
-          className="chamfer relative hidden items-center gap-0.5 justify-self-center bg-gradient-to-r from-nova-400/[0.06] via-white/[0.02] to-plasma-400/[0.06] p-1 backdrop-blur lg:flex"
+          className="chamfer relative mx-auto hidden shrink-0 items-center gap-0.5 bg-gradient-to-r from-nova-400/[0.06] via-white/[0.02] to-plasma-400/[0.06] p-1 backdrop-blur lg:flex"
         >
           <span
             aria-hidden
@@ -229,20 +224,17 @@ export function SiteHeader({ storeName, logoUrl, user, showAccounts = true }: Pr
                   active ? "text-white" : "text-fg-muted hover:text-fg",
                 )}
               >
-                <Icon className={cn("hidden size-4 transition-transform xl:block duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:-translate-y-0.5 group-hover:scale-110", active && "drop-shadow-[0_0_6px_rgb(41_168_255/0.9)]")} strokeWidth={2} />
+                <Icon className={cn("hidden size-4 transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:-translate-y-0.5 group-hover:scale-110", active && "drop-shadow-[0_0_6px_rgb(41_168_255/0.9)]")} strokeWidth={2} />
                 {label}
               </Link>
             );
           })}
         </nav>
 
-        <div className="col-start-3 flex items-center justify-end gap-2">
-          {/* Búsqueda escritorio */}
-          <SearchBox variant="desktop" inputRef={searchRef} showAccounts={showAccounts} />
-
+        <div className="ml-auto flex shrink-0 items-center justify-end gap-2 lg:ml-0">
           <button
             type="button"
-            className="grid size-10 place-items-center rounded-full text-fg-muted ring-1 ring-white/[0.08] transition-[color,background,box-shadow] duration-300 hover:bg-white/[0.06] hover:text-fg hover:ring-nova-400/40 2xl:hidden"
+            className="grid size-10 place-items-center rounded-full text-fg-muted ring-1 ring-white/[0.08] transition-[color,background,box-shadow] duration-300 hover:bg-white/[0.06] hover:text-fg hover:ring-nova-400/40"
             aria-label="Buscar"
             aria-expanded={searchOpen}
             onClick={toggleSearch}
@@ -359,7 +351,7 @@ export function SiteHeader({ storeName, logoUrl, user, showAccounts = true }: Pr
 
       {/* Búsqueda móvil */}
       {searchOpen && (
-        <div className="px-4 pb-3 2xl:hidden">
+        <div className="mx-auto max-w-2xl animate-fade-up px-4 pb-3">
           <SearchBox variant="mobile" inputRef={mobileSearchRef} onNavigate={() => setSearchOpen(false)} showAccounts={showAccounts} />
         </div>
       )}
