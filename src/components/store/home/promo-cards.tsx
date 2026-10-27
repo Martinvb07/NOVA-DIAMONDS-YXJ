@@ -13,15 +13,15 @@ export function PromoCards({ cards }: { cards: PromoCard[] }) {
           key={c.title}
           href={c.href}
           className={cn(
-            "group relative flex min-h-[150px] items-center gap-3 overflow-hidden rounded-[6px] bg-ink-850 p-5 transition-shadow",
-            c.highlight ? "glow-nova" : "ring-1 ring-white/[0.07] hover:ring-nova-400/40",
+            "surface group relative flex min-h-[150px] items-center gap-3 overflow-hidden p-5 transition-[transform,box-shadow] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1",
+            c.highlight && "glow-nova",
           )}
         >
           <div className="relative z-10 min-w-0 flex-1">
-            <p className="text-[15px] font-extrabold uppercase leading-tight tracking-wide text-fg">{c.kicker}</p>
-            <p className="text-[15px] font-semibold leading-tight text-fg-muted">{c.title}</p>
+            <p className="font-brand text-[14px] font-bold uppercase leading-tight tracking-[0.06em] text-fg">{c.kicker}</p>
+            <p className="text-nebula mt-0.5 text-[15px] font-semibold leading-tight">{c.title}</p>
             <p className="mt-2 text-[11.5px] text-fg-subtle">{c.note}</p>
-            <span className="mt-3.5 inline-flex h-8 items-center rounded-[4px] bg-nova-400 px-4 text-[10.5px] font-extrabold uppercase tracking-wider text-nova-ink shadow-[0_0_16px_-4px_rgb(41_168_255/0.8)] transition group-hover:bg-nova-300">
+            <span className="btn-nova chamfer-sm mt-3.5 inline-flex h-8 items-center px-4 text-[10.5px] font-extrabold uppercase tracking-wider">
               {c.cta}
             </span>
           </div>

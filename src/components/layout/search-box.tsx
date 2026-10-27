@@ -127,7 +127,7 @@ export function SearchBox({ variant, inputRef, onNavigate, showAccounts = true }
   let idx = -1;
 
   return (
-    <div ref={boxRef} role="search" className={cn("group relative", desktop ? "hidden xl:block" : "w-full")}>
+    <div ref={boxRef} role="search" className={cn("group relative", desktop ? "hidden 2xl:block" : "w-full")}>
       <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-fg-subtle transition-colors group-focus-within:text-nova-300" aria-hidden />
       <input
         ref={inputRef}

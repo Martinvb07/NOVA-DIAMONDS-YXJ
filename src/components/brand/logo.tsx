@@ -30,8 +30,8 @@ export function Logo({ name, logoUrl, className }: { name: string; logoUrl?: str
         className="h-9 w-auto drop-shadow-[0_0_10px_rgb(41_168_255/0.55)] transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover/logo:-rotate-6 group-hover/logo:scale-110 sm:h-10"
       />
       <span className="flex flex-col justify-center leading-none">
-        <span className="text-chrome font-brand text-[15px] font-black uppercase tracking-[0.06em] sm:text-[17px]">Nova Diamonds</span>
-        <span className="mt-1 font-brand text-[8.5px] font-bold uppercase tracking-[0.42em] text-nova-300/90 sm:text-[9px]">Free Fire · YXJ</span>
+        <span className="text-chrome whitespace-nowrap font-brand text-[15px] font-black uppercase tracking-[0.06em] sm:text-[17px]">Nova Diamonds</span>
+        <span className="mt-1 whitespace-nowrap font-brand text-[8.5px] font-bold uppercase tracking-[0.42em] text-nova-300/90 sm:text-[9px]">Free Fire · YXJ</span>
       </span>
       <span className="sr-only">{name}</span>
     </span>

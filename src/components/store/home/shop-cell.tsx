@@ -56,21 +56,21 @@ export function ShopCell({ item, variant = "plain" }: { item: ShopItem; variant?
       aria-disabled={item.disabled || undefined}
       className={cn(
         "group relative flex h-full flex-col items-center px-4 pb-5 pt-5 text-center transition-[background,box-shadow,transform] duration-300",
-        card ? "rounded-[6px] hover:z-10 hover:-translate-y-1 hover:bg-ink-800 hover:shadow-[0_0_0_1px_rgb(41_168_255/0.55),0_24px_50px_-20px_rgb(0_0_0/0.9),0_0_30px_-8px_rgb(41_168_255/0.45)]" : "hover:bg-white/[0.02]",
+        card ? "hover:z-10 hover:-translate-y-1 hover:bg-ink-800/80 hover:shadow-[0_0_0_1px_rgb(41_168_255/0.55),0_24px_50px_-20px_rgb(0_0_0/0.9),0_0_30px_-8px_rgb(41_168_255/0.45)]" : "hover:bg-white/[0.02]",
         item.disabled && "opacity-60",
       )}
     >
       {item.badge && (
-        <span className="absolute left-3 top-3 z-10 rounded-[3px] bg-nova-400 px-1.5 py-0.5 text-[9.5px] font-bold uppercase tracking-wide text-nova-ink">{item.badge}</span>
+        <span className="btn-nova chamfer-sm absolute left-3 top-3 z-10 px-2 py-0.5 text-[9.5px] font-bold uppercase tracking-wide">{item.badge}</span>
       )}
-      <div className="w-full max-w-[150px] overflow-hidden rounded-[8px] ring-1 ring-white/[0.06]">
+      <div className="chamfer w-full max-w-[150px] overflow-hidden">
         <ItemCover cover={item.cover} className="transition-transform duration-500 group-hover:scale-[1.06]" />
       </div>
       <p className="mt-4 line-clamp-2 text-[12.5px] font-bold uppercase leading-snug tracking-wide text-fg group-hover:text-nova-200">{item.title}</p>
       <p className="mt-1 line-clamp-1 text-[10.5px] font-medium uppercase tracking-wider text-fg-subtle">{item.sub}</p>
       <Prices item={item} />
       {card && (
-        <span className="mt-3 inline-flex h-8 items-center rounded-[4px] bg-nova-400 px-4 text-[10.5px] font-bold uppercase tracking-wider text-nova-ink opacity-0 shadow-[0_0_18px_-4px_rgb(41_168_255/0.8)] transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100 max-lg:opacity-100">
+        <span className="btn-nova chamfer-sm mt-3 inline-flex h-8 items-center px-4 text-[10.5px] font-bold uppercase tracking-wider opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100 max-lg:opacity-100">
           {item.disabled ? "No disponible" : item.cta}
         </span>
       )}

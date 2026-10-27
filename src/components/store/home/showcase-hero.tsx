@@ -46,7 +46,7 @@ export function ShowcaseHero({ slides }: { slides: HeroSlide[] }) {
     <section
       aria-roledescription="carrusel"
       aria-label="Destacados"
-      className="group relative overflow-hidden rounded-[6px] bg-ink-950 ring-1 ring-white/[0.08]"
+      className="surface group relative overflow-hidden"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       onTouchStart={(e) => {
@@ -60,7 +60,7 @@ export function ShowcaseHero({ slides }: { slides: HeroSlide[] }) {
         touch.current = null;
       }}
     >
-      <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(700px_380px_at_78%_55%,rgb(41_168_255/0.22),transparent_70%),radial-gradient(500px_300px_at_0%_0%,rgb(13_95_209/0.18),transparent_70%)]" />
+      <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(700px_380px_at_78%_55%,rgb(41_168_255/0.22),transparent_70%),radial-gradient(520px_320px_at_0%_100%,rgb(139_108_255/0.2),transparent_70%)]" />
       <div aria-hidden className="bg-grid pointer-events-none absolute inset-0 opacity-60" />
 
       <div className="relative flex transition-transform duration-700 ease-[cubic-bezier(0.3,0.7,0.2,1)]" style={{ transform: `translateX(-${i * 100}%)` }}>
@@ -69,22 +69,32 @@ export function ShowcaseHero({ slides }: { slides: HeroSlide[] }) {
           return (
             <div key={s.key} aria-hidden={off} className="grid w-full shrink-0 items-center gap-6 px-6 py-8 sm:grid-cols-[1.15fr_1fr] sm:px-14 sm:py-12 lg:min-h-[340px] lg:px-20">
               <div className="order-2 sm:order-1">
-                <p className="text-[15px] font-extrabold uppercase tracking-[0.12em] text-fg sm:text-[20px]">{s.kicker}</p>
-                <h2 className="text-chrome mt-1 text-[40px] font-black uppercase leading-[0.95] tracking-tight sm:text-[58px] lg:text-[68px]">{s.title}</h2>
+                <p className="inline-flex items-center gap-2 font-brand text-[12px] font-bold uppercase tracking-[0.3em] text-nova-300 sm:text-[13px]">
+                  <span className="h-px w-8 bg-gradient-to-r from-transparent to-nova-300" aria-hidden />
+                  {s.kicker}
+                </p>
+                <h2 className="text-chrome mt-3 text-[34px] font-black uppercase leading-[1] sm:text-[48px] lg:text-[56px]">{s.title}</h2>
                 <p className="mt-4 max-w-md text-[13.5px] leading-relaxed text-fg-muted">{s.text}</p>
                 <Link
                   href={s.href}
                   tabIndex={off ? -1 : 0}
-                  className="mt-6 inline-flex h-11 items-center rounded-[4px] bg-nova-400 px-7 text-[13px] font-extrabold uppercase tracking-wider text-nova-ink shadow-[0_0_26px_-4px_rgb(41_168_255/0.85)] transition hover:bg-nova-300"
+                  className="btn-nova btn-shine mt-7 inline-flex h-12 items-center px-8 font-brand text-[12.5px] font-bold uppercase tracking-[0.14em]"
                 >
                   {s.cta}
                 </Link>
               </div>
               <div className="relative order-1 mx-auto w-full max-w-[230px] sm:order-2 sm:max-w-[300px]">
-                <div className="overflow-hidden rounded-[18px] shadow-[0_0_60px_-10px_rgb(41_168_255/0.6)] ring-1 ring-nova-400/30 animate-float">
+                {/* Órbitas alrededor del paquete */}
+                <span aria-hidden className="pointer-events-none absolute -inset-[16%] rounded-full border border-nova-400/25 animate-orbit">
+                  <span className="absolute left-1/2 top-0 size-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-cyan-glow shadow-[0_0_14px_3px_rgb(94_231_255/0.8)]" />
+                </span>
+                <span aria-hidden className="pointer-events-none absolute -inset-[30%] rounded-full border border-dashed border-plasma-400/25 animate-orbit-rev">
+                  <span className="absolute bottom-[14%] right-[6%] size-2 rounded-full bg-plasma-400 shadow-[0_0_12px_3px_rgb(139_108_255/0.8)]" />
+                </span>
+                <div className="chamfer relative overflow-hidden shadow-[0_0_60px_-10px_rgb(41_168_255/0.6)] animate-float">
                   <DiamondCover tier={s.tier} diamonds={s.diamonds} bonus={s.bonus} />
                 </div>
-                <div className="absolute -bottom-3 -left-5 grid size-[92px] place-items-center rounded-full bg-ink-900/90 text-center ring-2 ring-nova-400/70 backdrop-blur shadow-[0_0_30px_-6px_rgb(41_168_255/0.8)] sm:size-[104px]">
+                <div className="absolute -bottom-3 -left-5 grid size-[92px] place-items-center rounded-full bg-ink-950/90 text-center ring-2 ring-plasma-400/70 backdrop-blur shadow-[0_0_30px_-6px_rgb(41_168_255/0.8)] sm:size-[104px]">
                   <span className="leading-tight">
                     {s.original != null && s.original > s.price && <span className="block text-[11px] text-fg-subtle line-through">{formatMoney(s.original, s.currency)}</span>}
                     <span className="block px-1 text-[15px] font-extrabold tabular-nums text-nova-300 sm:text-[17px]">{formatMoney(s.price, s.currency)}</span>

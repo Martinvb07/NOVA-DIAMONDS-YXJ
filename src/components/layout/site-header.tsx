@@ -120,7 +120,7 @@ export function SiteHeader({ storeName, logoUrl, user, showAccounts = true }: Pr
       }
       if (e.key === "/" && !(e.target as HTMLElement)?.closest("input,textarea,select")) {
         e.preventDefault();
-        if (window.matchMedia("(min-width: 1280px)").matches) searchRef.current?.focus();
+        if (window.matchMedia("(min-width: 1536px)").matches) searchRef.current?.focus();
         else {
           setOpen(false);
           setSearchOpen(true);
@@ -203,13 +203,13 @@ export function SiteHeader({ storeName, logoUrl, user, showAccounts = true }: Pr
           ref={navRef}
           aria-label="Principal"
           onMouseLeave={toActive}
-          className="relative hidden items-center gap-0.5 justify-self-center rounded-full bg-white/[0.025] p-1 ring-1 ring-white/[0.07] backdrop-blur lg:flex"
+          className="chamfer relative hidden items-center gap-0.5 justify-self-center bg-gradient-to-r from-nova-400/[0.06] via-white/[0.02] to-plasma-400/[0.06] p-1 backdrop-blur lg:flex"
         >
           <span
             aria-hidden
             className={cn(
-              "absolute inset-y-1 rounded-full transition-[left,width,opacity,background,box-shadow] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]",
-              pill.hover ? "bg-white/[0.07] shadow-none" : "bg-gradient-to-b from-nova-400/25 to-nova-500/10 shadow-[inset_0_0_0_1px_rgb(41_168_255/0.45),0_0_22px_-6px_rgb(41_168_255/0.8)]",
+              "chamfer-sm absolute inset-y-1 transition-[left,width,opacity,background,box-shadow] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]",
+              pill.hover ? "bg-white/[0.08]" : "bg-gradient-to-r from-nova-400/35 to-plasma-400/25",
               pill.on ? "opacity-100" : "opacity-0",
             )}
             style={{ left: pill.left, width: pill.width }}
@@ -225,11 +225,11 @@ export function SiteHeader({ storeName, logoUrl, user, showAccounts = true }: Pr
                 onFocus={(e) => moveTo(e.currentTarget, !active)}
                 onBlur={toActive}
                 className={cn(
-                  "group relative z-10 inline-flex h-9 items-center gap-2 rounded-full px-3.5 text-[13px] font-semibold transition-colors duration-300 xl:px-4",
-                  active ? "text-nova-200" : "text-fg-muted hover:text-fg",
+                  "group relative z-10 inline-flex h-9 items-center gap-2 px-3 text-[13px] font-semibold transition-colors duration-300 xl:px-3.5",
+                  active ? "text-white" : "text-fg-muted hover:text-fg",
                 )}
               >
-                <Icon className={cn("size-4 transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:-translate-y-0.5 group-hover:scale-110", active && "drop-shadow-[0_0_6px_rgb(41_168_255/0.9)]")} strokeWidth={2} />
+                <Icon className={cn("hidden size-4 transition-transform xl:block duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:-translate-y-0.5 group-hover:scale-110", active && "drop-shadow-[0_0_6px_rgb(41_168_255/0.9)]")} strokeWidth={2} />
                 {label}
               </Link>
             );
@@ -242,7 +242,7 @@ export function SiteHeader({ storeName, logoUrl, user, showAccounts = true }: Pr
 
           <button
             type="button"
-            className="grid size-10 place-items-center rounded-full text-fg-muted ring-1 ring-white/[0.08] transition-[color,background,box-shadow] duration-300 hover:bg-white/[0.06] hover:text-fg hover:ring-nova-400/40 xl:hidden"
+            className="grid size-10 place-items-center rounded-full text-fg-muted ring-1 ring-white/[0.08] transition-[color,background,box-shadow] duration-300 hover:bg-white/[0.06] hover:text-fg hover:ring-nova-400/40 2xl:hidden"
             aria-label="Buscar"
             aria-expanded={searchOpen}
             onClick={toggleSearch}
@@ -267,14 +267,14 @@ export function SiteHeader({ storeName, logoUrl, user, showAccounts = true }: Pr
               className="hidden h-10 items-center gap-2 rounded-full pl-1 pr-3 text-[13px] font-semibold ring-1 ring-white/[0.08] transition-[background,box-shadow] duration-300 hover:bg-white/[0.06] hover:ring-nova-400/40 sm:inline-flex"
             >
               <UserAvatar user={user} size={32} ring={false} />
-              <span className="max-w-24 truncate">{user.name && user.name !== "No Name" ? user.name.split(" ")[0] : "Mi cuenta"}</span>
+              <span className="max-w-24 truncate lg:hidden xl:inline">{user.name && user.name !== "No Name" ? user.name.split(" ")[0] : "Mi cuenta"}</span>
             </Link>
           ) : (
             <Link
               href="/ingresar"
-              className="hidden h-10 items-center gap-2 rounded-full px-4 text-[13px] font-semibold text-fg ring-1 ring-white/[0.12] transition-[background,box-shadow,color] duration-300 hover:bg-white/[0.06] hover:text-nova-200 hover:ring-nova-400/50 sm:inline-flex"
+              className="hidden h-10 items-center gap-2 rounded-full px-4 text-[13px] font-semibold text-fg ring-1 lg:px-3 xl:px-4 ring-white/[0.12] transition-[background,box-shadow,color] duration-300 hover:bg-white/[0.06] hover:text-nova-200 hover:ring-nova-400/50 sm:inline-flex"
             >
-              <LogIn className="size-4" /> Ingresar
+              <LogIn className="size-4" /> <span className="lg:hidden xl:inline">Ingresar</span>
             </Link>
           )}
 
@@ -283,7 +283,7 @@ export function SiteHeader({ storeName, logoUrl, user, showAccounts = true }: Pr
             href="/carrito"
             aria-label={`Carrito (${count})`}
             className={cn(
-              "btn-shine relative inline-flex h-10 items-center gap-2 rounded-full bg-gradient-to-b from-nova-400 to-nova-600 text-nova-ink shadow-[0_1px_0_0_rgb(255_255_255/0.35)_inset,0_8px_24px_-8px_rgb(41_168_255/0.75)] transition-[transform,box-shadow] duration-300 hover:-translate-y-px hover:shadow-[0_1px_0_0_rgb(255_255_255/0.35)_inset,0_10px_30px_-6px_rgb(41_168_255/0.95)] active:translate-y-0",
+              "btn-nova btn-shine relative inline-flex h-10 items-center gap-2",
               "w-10 justify-center lg:w-auto lg:pl-3.5 lg:pr-2",
             )}
           >
@@ -293,7 +293,7 @@ export function SiteHeader({ storeName, logoUrl, user, showAccounts = true }: Pr
               key={count}
               className={cn(
                 "grid min-w-[20px] place-items-center rounded-full bg-ink-950 px-1.5 text-[11px] font-bold leading-[20px] text-nova-200 animate-bump",
-                "absolute -right-1 -top-1 ring-2 ring-ink-900 lg:static lg:ring-0",
+                "absolute right-0.5 top-0.5 lg:static",
                 count === 0 && "max-lg:hidden",
               )}
             >
@@ -359,7 +359,7 @@ export function SiteHeader({ storeName, logoUrl, user, showAccounts = true }: Pr
 
       {/* Búsqueda móvil */}
       {searchOpen && (
-        <div className="px-4 pb-3 xl:hidden">
+        <div className="px-4 pb-3 2xl:hidden">
           <SearchBox variant="mobile" inputRef={mobileSearchRef} onNavigate={() => setSearchOpen(false)} showAccounts={showAccounts} />
         </div>
       )}

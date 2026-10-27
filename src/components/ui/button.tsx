@@ -10,9 +10,9 @@ const base =
 
 const variants: Record<Variant, string> = {
   primary:
-    "btn-shine bg-nova-400 text-nova-ink hover:bg-nova-300 shadow-[0_1px_0_0_rgb(255_255_255/0.35)_inset,0_8px_24px_-10px_rgb(41_168_255/0.55)]",
+    "btn-shine btn-nova font-semibold",
   secondary: "bg-ink-700 text-fg hover:bg-ink-600 border border-white/8",
-  outline: "border border-white/14 text-fg hover:border-white/28 hover:bg-white/[0.03]",
+  outline: "border border-nova-400/30 text-fg hover:border-nova-300/70 hover:bg-nova-400/[0.06] hover:shadow-[0_0_20px_-6px_rgb(41_168_255/0.6)]",
   ghost: "text-fg-muted hover:text-fg hover:bg-white/[0.05]",
   danger: "bg-bad-400/12 text-bad-400 border border-bad-400/30 hover:bg-bad-400/20",
 };

@@ -18,10 +18,12 @@ export function FeaturedCarousel({ title, strong, items, href, cta = "Ver todos"
 
   return (
     <section className="relative" aria-label={`${strong} ${title}`}>
-      <div className="rounded-[6px] bg-ink-850 ring-1 ring-white/[0.07]">
-        <div className="flex items-center justify-between gap-4 border-b border-white/[0.07] px-5 py-3.5">
-          <h2 className="text-[13px] uppercase tracking-[0.1em] text-fg-muted">
-            <span className="font-extrabold text-fg">{strong}</span> {title}
+      <div className="surface overflow-hidden">
+        <div className="flex items-center justify-between gap-4 border-b border-white/[0.07] bg-gradient-to-r from-nova-400/[0.07] via-transparent to-plasma-400/[0.06] px-5 py-3.5">
+          <h2 className="flex items-center gap-3 text-[13px] uppercase tracking-[0.12em] text-fg-muted">
+            <span className="font-display text-[12px] font-extrabold text-nova-300">01</span>
+            <span className="h-4 w-px bg-nova-400/50" aria-hidden />
+            <span><span className="font-black text-fg">{strong}</span> {title}</span>
           </h2>
           <Link href={href} className="inline-flex items-center gap-1.5 text-[11.5px] text-fg-subtle transition-colors hover:text-nova-300">
             {cta} <ArrowRight className="size-3.5" />
@@ -45,7 +47,7 @@ export function FeaturedCarousel({ title, strong, items, href, cta = "Ver todos"
             type="button"
             onClick={() => scroll(d)}
             aria-label={label}
-            className={`absolute top-1/2 hidden size-8 place-items-center rounded-full bg-ink-900 text-fg-subtle ring-1 ring-white/15 transition hover:text-nova-300 hover:ring-nova-400/60 md:grid ${side}`}
+            className={`absolute top-1/2 hidden size-8 place-items-center chamfer-sm bg-ink-900 text-fg-subtle ring-1 ring-white/15 transition hover:bg-nova-400 hover:text-nova-ink md:grid ${side}`}
           >
             <Icon className="size-4" />
           </button>

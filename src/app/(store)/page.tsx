@@ -8,7 +8,6 @@ import { RankEmblem } from "@/components/brand/rank-emblem";
 import { FF_RANKS } from "@/domain/freefire";
 import { formatNumber, packageTitle } from "@/lib/money";
 import { db } from "@/lib/db";
-import { BannerSlot } from "@/components/store/banner-slot";
 import { LivePurchases } from "@/components/store/live-purchases";
 import { Container } from "@/components/ui/primitives";
 import { AccountsIllustration } from "@/components/brand/illustrations";
@@ -17,6 +16,7 @@ import { ProductTabs } from "@/components/store/home/product-tabs";
 import { PromoCards, type PromoCard } from "@/components/store/home/promo-cards";
 import type { ShopItem } from "@/components/store/home/shop-cell";
 import { ShowcaseHero, type HeroSlide } from "@/components/store/home/showcase-hero";
+import { Guarantee, HowItWorks, SectionTitle } from "@/components/store/home/nova-sections";
 import { PRODUCT_LABELS } from "@/domain/labels";
 import { formatMoney } from "@/lib/money";
 import type { AccountCardView, PackageView } from "@/server/catalog";
@@ -210,19 +210,20 @@ export default async function HomePage() {
           <p className="mt-2 text-center text-[11.5px] text-fg-subtle">{bonusPct ? `Todos con +${bonusPct}% de bonus · precio final en pesos` : "Precio final en pesos colombianos"}</p>
         </div>
 
-        {slides.length > 0 && heroBanners.length > 0 && <HeroCarousel banners={heroBanners} />}
+        <HowItWorks />
 
         {/* Compras en vivo: últimas 10 compras pagadas (reales), se actualiza sola */}
         <LivePurchases initial={recent} />
 
-        <ProductTabs tabs={tabs} />
-
-        <BannerSlot slot="HOME_TRUST" variant="wide" label="Cómo comprar" />
+        <section aria-label="Vitrina">
+          <SectionTitle index="03" title="Explora la tienda" sub="Filtra por lo nuevo, lo más vendido o las ofertas" />
+          <ProductTabs tabs={tabs} />
+        </section>
 
         {/* Cuentas */}
         {visibleAccounts.length > 0 && (
           <section>
-            <RowHead title="Cuentas destacadas" sub="Cada cuenta es única · procedencia revisada antes de publicar" href="/cuentas" cta="Ver catálogo" />
+            <SectionTitle index="04" title="Cuentas destacadas" sub="Cada cuenta es única · procedencia revisada antes de publicar" />
             {rankChips.length > 1 && (
               <nav aria-label="Cuentas por rango" className="-mx-1 mb-5 flex gap-2 overflow-x-auto px-1 py-1 [scrollbar-width:none]">
                 {rankChips.map((r) => (
@@ -248,7 +249,7 @@ export default async function HomePage() {
           </section>
         )}
 
-        <BannerSlot slot="HOME_BOTTOM" variant="wide" label="Compra con confianza" />
+        <Guarantee />
       </Container>
     </>
   );

@@ -81,25 +81,26 @@ export function SiteFooter({ settings, payments, showAccounts = true }: { settin
 
       <Container className="relative">
         {/* Llamado a la acción */}
-        <div className="relative -mb-2 mt-8 overflow-hidden rounded-[22px] sm:mt-12 bg-[linear-gradient(115deg,#0a2a5e_0%,#1167d8_55%,#4cc3ff_120%)] p-6 ring-1 ring-white/10 sm:p-8">
-          <div className="pointer-events-none absolute inset-0 opacity-25" style={{ background: "repeating-linear-gradient(115deg, transparent 0 46px, rgba(255,255,255,.08) 46px 48px)" }} aria-hidden />
-          <Gem className="pointer-events-none absolute -right-8 -top-6 w-28 rotate-[-12deg] opacity-80 sm:top-1/2 sm:-translate-y-1/2 sm:opacity-90 drop-shadow-[0_20px_40px_rgba(0,0,0,0.45)] sm:right-10 sm:w-48" />
+        <div className="surface relative mt-8 overflow-hidden p-6 sm:mt-12 sm:p-9">
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(600px_260px_at_85%_50%,rgb(41_168_255/0.28),transparent_70%),radial-gradient(500px_240px_at_10%_120%,rgb(139_108_255/0.25),transparent_70%)]" aria-hidden />
+          <div className="bg-grid pointer-events-none absolute inset-0 opacity-50" aria-hidden />
+          <Gem className="pointer-events-none absolute -right-8 -top-6 w-28 rotate-[-12deg] opacity-80 animate-float drop-shadow-[0_0_40px_rgb(41_168_255/0.6)] sm:right-12 sm:top-1/2 sm:w-44 sm:-translate-y-1/2 sm:opacity-95" />
           <div className="relative max-w-xl">
-            <p className="max-w-[75%] text-[26px] font-extrabold italic leading-tight tracking-tight text-white sm:max-w-none sm:text-[34px]">¿LISTO PARA RECARGAR?</p>
-            <p className="mt-1.5 text-[14.5px] font-medium text-white/80">Pon tu ID, elige tu paquete con bonus y paga en pesos.</p>
-            <div className="mt-5 grid gap-2.5 sm:flex sm:flex-wrap">
-              <Link href="/recargas" className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-white px-5 sm:h-11 text-[14px] font-bold text-ink-950 transition hover:bg-nova-300">
+            <p className="font-brand text-[11px] font-bold uppercase tracking-[0.3em] text-nova-300">Nova Diamonds</p>
+            <p className="mt-2 max-w-[75%] font-brand text-[24px] font-black uppercase leading-tight sm:max-w-none sm:text-[32px]">
+              ¿Listo para <span className="text-nebula">recargar?</span>
+            </p>
+            <p className="mt-2 text-[14.5px] text-fg-muted">Pon tu ID, elige tu paquete con bonus y paga en pesos.</p>
+            <div className="mt-6 grid gap-2.5 sm:flex sm:flex-wrap">
+              <Link href="/recargas" className="btn-nova btn-shine inline-flex h-12 items-center justify-center gap-2 px-6 font-brand text-[12px] font-bold uppercase tracking-[0.12em]">
                 Recargar diamantes <ArrowRight className="size-4" />
               </Link>
-              {showAccounts ? (
-                <Link href="/cuentas" className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-white/15 px-5 sm:h-11 text-[14px] font-semibold text-white ring-1 ring-white/25 backdrop-blur transition hover:bg-white/25">
-                  Ver cuentas
-                </Link>
-              ) : (
-                <Link href="/pedido" className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-white/15 px-5 sm:h-11 text-[14px] font-semibold text-white ring-1 ring-white/25 backdrop-blur transition hover:bg-white/25">
-                  Rastrear pedido
-                </Link>
-              )}
+              <Link
+                href={showAccounts ? "/cuentas" : "/pedido"}
+                className="chamfer inline-flex h-12 items-center justify-center gap-2 bg-white/[0.06] px-6 font-brand text-[12px] font-bold uppercase tracking-[0.12em] text-fg transition hover:bg-white/[0.12]"
+              >
+                {showAccounts ? "Ver cuentas" : "Rastrear pedido"}
+              </Link>
             </div>
           </div>
         </div>
@@ -138,7 +139,7 @@ export function SiteFooter({ settings, payments, showAccounts = true }: { settin
           <div className="grid grid-cols-2 gap-x-6 gap-y-8 sm:grid-cols-3 sm:gap-8">
             {columns.map((col) => (
               <nav key={col.title} aria-label={col.title}>
-                <p className="mb-3 text-[13px] font-bold text-fg sm:mb-4">{col.title}</p>
+                <p className="mb-3 font-brand text-[11.5px] font-bold uppercase tracking-[0.18em] text-nova-200 sm:mb-4">{col.title}</p>
                 <ul className="space-y-2.5 sm:space-y-3">
                   {col.links.map((l) => (
                     <li key={l.href}>
@@ -155,9 +156,9 @@ export function SiteFooter({ settings, payments, showAccounts = true }: { settin
         </div>
 
         {/* Garantías */}
-        <ul className="grid grid-cols-2 gap-px overflow-hidden rounded-[16px] bg-white/[0.06] ring-1 ring-white/[0.06] sm:grid-cols-4">
+        <ul className="surface-flat grid grid-cols-2 gap-px overflow-hidden sm:grid-cols-4">
           {GUARANTEES.map(({ icon: Icon, label }) => (
-            <li key={label} className="flex items-center justify-center gap-2 bg-ink-900 px-2 py-3.5 text-[12.5px] font-semibold sm:gap-2.5 sm:px-3 sm:py-4 sm:text-[13px]">
+            <li key={label} className="flex items-center justify-center gap-2 px-2 py-3.5 text-[12.5px] font-semibold sm:gap-2.5 sm:px-3 sm:py-4 sm:text-[13px]">
               <Icon className="size-4 text-nova-300" /> {label}
             </li>
           ))}
