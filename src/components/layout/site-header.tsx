@@ -42,6 +42,7 @@ export function SiteHeader({ storeName, logoUrl, user, showAccounts = true }: Pr
   const pathname = usePathname();
   const { items, ready } = useCart();
   const [scrolled, setScrolled] = useState(false);
+  const [compact, setCompact] = useState(false);
   const [open, setOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const mobileSearchRef = useRef<HTMLInputElement>(null);
@@ -49,7 +50,14 @@ export function SiteHeader({ storeName, logoUrl, user, showAccounts = true }: Pr
   const [menuTop, setMenuTop] = useState(68);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 8);
+    // Las barras de arriba se pliegan con histéresis: se esconden pasados 100 px y vuelven por debajo de 10.
+    // El margen (90 px) es mayor que lo que miden (64 px); así, en páginas cortas, plegarlas no devuelve
+    // la página bajo el umbral y la navbar no entra en un bucle de abrir/cerrar (parpadeo).
+    const onScroll = () => {
+      const y = window.scrollY;
+      setScrolled(y > 8);
+      setCompact((c) => (c ? y > 10 : y > 100));
+    };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
@@ -174,7 +182,7 @@ export function SiteHeader({ storeName, logoUrl, user, showAccounts = true }: Pr
       )}
     >
       {/* Barra superior (escritorio): moneda y país a la izquierda; accesos rápidos a la derecha. Se pliega al bajar. */}
-      <div className={cn("hidden overflow-hidden border-b border-white/[0.05] transition-[height,opacity] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] lg:block", scrolled ? "h-0 opacity-0" : "h-8 opacity-100")}>
+      <div className={cn("hidden overflow-hidden border-b border-white/[0.05] transition-[height,opacity] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] lg:block", compact ? "h-0 opacity-0" : "h-8 opacity-100")}>
         <div className="mx-auto flex h-8 max-w-[1240px] items-center gap-5 px-8 text-[11.5px] font-medium text-fg-subtle">
           <span className="inline-flex items-center gap-1.5">
             <span className="size-1.5 rounded-full bg-ok-400 shadow-[0_0_8px_rgb(69_217_155/0.9)]" aria-hidden />
@@ -311,7 +319,7 @@ export function SiteHeader({ storeName, logoUrl, user, showAccounts = true }: Pr
       </div>
 
       {/* Franja de aviso bajo el encabezado (escritorio). */}
-      <div className={cn("hidden overflow-hidden border-t border-white/[0.05] bg-gradient-to-r from-transparent via-nova-500/[0.07] to-transparent transition-[height,opacity] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] lg:block", scrolled ? "h-0 opacity-0" : "h-8 opacity-100")}>
+      <div className={cn("hidden overflow-hidden border-t border-white/[0.05] bg-gradient-to-r from-transparent via-nova-500/[0.07] to-transparent transition-[height,opacity] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] lg:block", compact ? "h-0 opacity-0" : "h-8 opacity-100")}>
         <p className="mx-auto flex h-8 max-w-[1240px] items-center justify-center gap-2 px-8 text-[11px] font-semibold uppercase tracking-[0.14em] text-fg-muted">
           <Gem className="size-3.5 text-nova-300" aria-hidden />
           Diamantes al instante con tu ID · paga en pesos con PSE, Nequi o tarjeta
