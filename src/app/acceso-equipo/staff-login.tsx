@@ -11,7 +11,7 @@ import { staffEnrollAction, staffFinishEnrollAction, staffPasswordAction, staffT
 /** Indicador de pasos del ingreso. */
 function Steps({ labels, current }: { labels: string[]; current: number }) {
   return (
-    <ol className="mb-8 flex items-center gap-2" aria-label="Pasos del ingreso">
+    <ol className="mb-4 flex items-center gap-2" aria-label="Pasos del ingreso">
       {labels.map((label, i) => {
         const done = i < current;
         const on = i === current;
@@ -36,10 +36,12 @@ function Steps({ labels, current }: { labels: string[]; current: number }) {
 
 function Heading({ icon, title, children }: { icon: ReactNode; title: string; children?: ReactNode }) {
   return (
-    <div className="mb-6">
-      <span className="mb-4 grid size-11 place-items-center rounded-[12px] bg-nova-400/10 text-nova-300 ring-1 ring-nova-400/25">{icon}</span>
-      <h1 className="font-display text-[26px] font-bold leading-tight tracking-tight sm:text-[28px]">{title}</h1>
-      {children && <p className="mt-2 text-[14px] leading-relaxed text-fg-muted">{children}</p>}
+    <div className="mb-4">
+      <div className="flex items-center gap-3">
+        <span className="chamfer-sm grid size-10 shrink-0 place-items-center bg-gradient-to-br from-nova-400/25 to-plasma-400/20 text-nova-200">{icon}</span>
+        <h1 className="text-[20px] font-black uppercase leading-tight sm:text-[22px]">{title}</h1>
+      </div>
+      {children && <p className="mt-2.5 text-[13.5px] leading-relaxed text-fg-muted">{children}</p>}
     </div>
   );
 }
@@ -82,7 +84,7 @@ function OtpInput() {
             <div
               key={i}
               className={cn(
-                "grid h-14 place-items-center rounded-[12px] bg-ink-900 font-mono text-[24px] font-bold tabular-nums ring-1 transition-all sm:h-16",
+                "grid h-12 place-items-center rounded-[10px] bg-ink-900 font-mono text-[22px] font-bold tabular-nums ring-1 transition-all sm:h-[52px]",
                 active ? "ring-2 ring-nova-400 shadow-[0_0_0_4px_rgba(41,168,255,0.12)]" : value[i] ? "ring-white/20" : "ring-white/[0.08]",
               )}
             >
@@ -166,7 +168,7 @@ export function StaffLogin({ next }: { next: string }) {
         </Heading>
         <ul aria-label="Códigos de recuperación" className="grid grid-cols-2 gap-2 rounded-[14px] bg-ink-900 p-3 ring-1 ring-white/10">
           {codes.map((c, i) => (
-            <li key={c} className="flex items-center gap-2 rounded-[8px] bg-white/[0.04] px-2.5 py-2 font-mono text-[14px] tracking-wider">
+            <li key={c} className="flex items-center gap-2 rounded-[8px] bg-white/[0.04] px-2.5 py-1.5 font-mono text-[13.5px] tracking-wider">
               <span className="w-4 text-right text-[11px] text-fg-subtle">{i + 1}</span>
               <span data-code>{c}</span>
             </li>
@@ -206,11 +208,11 @@ export function StaffLogin({ next }: { next: string }) {
         <Heading icon={<Smartphone className="size-5" />} title="Activa la verificación en dos pasos">
           Solo la primera vez. Desde ahora cada ingreso pedirá un código de tu celular.
         </Heading>
-        <div className="grid gap-5 sm:grid-cols-[auto_minmax(0,1fr)] sm:items-center">
-          <div className="mx-auto rounded-[16px] bg-white p-2.5 shadow-[0_20px_50px_-20px_rgba(41,168,255,0.35)]">
-            <img src={state.qr} alt="Código QR para la app de autenticación" width={168} height={168} className="block" />
+        <div className="grid gap-4 sm:grid-cols-[auto_minmax(0,1fr)] sm:items-center">
+          <div className="mx-auto rounded-[12px] bg-white p-2 shadow-[0_0_40px_-10px_rgba(41,168,255,0.6)]">
+            <img src={state.qr} alt="Código QR para la app de autenticación" width={136} height={136} className="block" />
           </div>
-          <ol className="space-y-3 text-[13.5px] text-fg-muted">
+          <ol className="space-y-2 text-[13px] text-fg-muted">
             {[
               <>
                 Instala <strong className="text-fg">Google Authenticator</strong>, Microsoft Authenticator o Authy.
@@ -220,23 +222,23 @@ export function StaffLogin({ next }: { next: string }) {
             ].map((t, i) => (
               <li key={i} className="flex gap-2.5">
                 <span className="grid size-5 shrink-0 place-items-center rounded-full bg-white/[0.08] text-[11px] font-semibold text-fg">{i + 1}</span>
-                <span className="leading-relaxed">{t}</span>
+                <span className="leading-snug">{t}</span>
               </li>
             ))}
           </ol>
         </div>
-        <details className="group mt-4 rounded-[12px] bg-ink-900/70 px-3.5 py-2.5 ring-1 ring-white/[0.07] [&_summary::-webkit-details-marker]:hidden">
+        <details className="group mt-3 rounded-[10px] bg-ink-900/70 px-3.5 py-2 ring-1 ring-white/[0.07] [&_summary::-webkit-details-marker]:hidden">
           <summary className="cursor-pointer list-none text-[12.5px] text-fg-muted hover:text-fg">¿No puedes escanear? Ver la clave para escribirla</summary>
           <span className="mt-2 block select-all break-all font-mono text-[13px] tracking-wider text-fg">{state.secret}</span>
         </details>
-        <p className="mb-2 mt-6 text-[12.5px] font-medium">Código de la app</p>
+        <p className="mb-2 mt-4 text-[12.5px] font-medium">Código de la app</p>
         <OtpInput />
         {state.error && (
           <Alert tone="danger" className="mt-4">
             {state.error}
           </Alert>
         )}
-        <Button type="submit" size="lg" className="mt-5 h-12 w-full" loading={enrollPending}>
+        <Button type="submit" size="lg" className="mt-4 h-12 w-full" loading={enrollPending}>
           Activar y entrar
         </Button>
       </form>

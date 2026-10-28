@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 export function Gem({ className, hue = "ice" }: { className?: string; hue?: "ice" | "nova" }) {
   const id = useId().replace(/:/g, "");
   const c = hue === "nova"
-    ? { a: "#f1ffc8", b: "#29a8ff", c: "#7f9f1a", d: "#3f5108" }
+    ? { a: "#e9fbff", b: "#5ee7ff", c: "#8b6cff", d: "#2e1a8a" }
     : { a: "#e8f6ff", b: "#7cc8ff", c: "#2f7fe0", d: "#173a8a" };
   return (
     <svg viewBox="0 0 120 110" className={cn("drop-shadow-[0_12px_24px_rgba(0,0,0,0.45)]", className)} aria-hidden>
