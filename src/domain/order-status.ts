@@ -26,12 +26,12 @@ export const ORDER_STATUS_META: Record<OrderStatusValue, { label: string; tone: 
   PROCESSING: {
     label: "En procesamiento",
     tone: "accent",
-    customer: "La entrega está en curso con nuestro proveedor.",
+    customer: "Estamos entregando tu pedido.",
   },
   DELIVERED: {
     label: "Entregado",
     tone: "success",
-    customer: "El proveedor confirmó la entrega de tu pedido.",
+    customer: "Tu pedido fue entregado.",
   },
   DELIVERY_FAILED: {
     label: "Error de entrega",
