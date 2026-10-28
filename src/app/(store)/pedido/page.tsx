@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowRight, Clock, Inbox, PackageX, UserRound } from "lucide-react";
 import { Container } from "@/components/ui/primitives";
 import { StatusGuide } from "@/components/orders/status-guide";
+import { RouteArt } from "@/components/brand/spot-art";
 import { getCurrentUser } from "@/lib/auth";
 import { getSettings } from "@/server/settings";
 import { TrackForm } from "./track-form";
@@ -28,9 +29,19 @@ export default async function TrackPage() {
               <h1 className="text-[28px] font-bold tracking-tight sm:text-[34px]">Rastrear pedido</h1>
               <p className="mt-1.5 text-[15px] text-fg-muted">Mira en qué va tu pago y tu entrega. No necesitas cuenta.</p>
             </div>
+            <RouteArt className="mb-1 hidden w-[300px] shrink-0 md:block" />
           </div>
 
+          {/* Formulario con forma de ticket */}
           <div className="relative mt-6 rounded-[18px] bg-ink-850 p-5 ring-1 ring-white/[0.08] sm:p-7">
+            <div className="mb-5 flex items-center justify-between gap-4">
+              <p className="font-mono text-[11.5px] font-semibold uppercase tracking-[0.18em] text-fg-subtle">Ticket de pedido · {settings.storeName}</p>
+              <span className="hidden h-6 shrink-0 items-stretch gap-[2px] opacity-30 sm:flex" aria-hidden>
+                {[2, 1, 3, 1, 1, 2, 1, 3, 2, 1, 1, 2, 3, 1, 2, 1, 1, 3, 1, 2].map((w, i) => (
+                  <span key={i} className="bg-white" style={{ width: w }} />
+                ))}
+              </span>
+            </div>
             <TrackForm prefix={prefix} />
           </div>
 

@@ -7,7 +7,7 @@ export function LogoMark({ className }: { className?: string }) {
 }
 
 /**
- * Logo completo: isotipo YXJ + "NOVA DIAMONDS" en letra cromada (Orbitron, como el logo original).
+ * Logo completo (misma estructura del logo de VANTA): isotipo YXJ con brillo suave + "NOVA DIAMONDS" en Orbitron.
  * Texto real en vez de imagen para que se lea nítido a cualquier tamaño. Con logotipo propio en Ajustes (logoUrl) se usa ese.
  */
 export function Logo({ name, logoUrl, className }: { name: string; logoUrl?: string; className?: string }) {
@@ -19,20 +19,9 @@ export function Logo({ name, logoUrl, className }: { name: string; logoUrl?: str
     );
   }
   return (
-    <span className={cn("group/logo inline-flex items-center gap-2.5", className)}>
-      <Image
-        src="/brand/nova-yxj.png"
-        alt=""
-        aria-hidden
-        width={512}
-        height={414}
-        priority
-        className="h-8 w-auto sm:h-9"
-      />
-      <span className="flex flex-col justify-center leading-none">
-        <span className="whitespace-nowrap font-brand text-[15px] font-bold uppercase tracking-[0.04em] text-fg sm:text-[16px]">Nova Diamonds</span>
-        <span className="mt-1 whitespace-nowrap text-[11px] font-medium text-fg-subtle">Free Fire · YXJ</span>
-      </span>
+    <span className={cn("inline-flex items-center gap-2", className)}>
+      <LogoMark className="h-9 drop-shadow-[0_0_10px_rgb(41_168_255/0.3)] sm:h-10" />
+      <span className="whitespace-nowrap font-brand text-[16px] font-black uppercase tracking-[0.04em] text-fg sm:text-[18px]">Nova Diamonds</span>
       <span className="sr-only">{name}</span>
     </span>
   );

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { createPortal, flushSync } from "react-dom";
-import { ChevronDown, ChevronRight, CreditCard, Gem, Home, LayoutDashboard, LifeBuoy, LogIn, Menu, Radar, Search, ShoppingBag, Users, X } from "lucide-react";
+import { ChevronRight, Gem, Home, LayoutDashboard, LifeBuoy, LogIn, Menu, Radar, Search, ShoppingBag, Users, X } from "lucide-react";
 import { Logo } from "@/components/brand/logo";
 import { useCart } from "@/components/cart/cart-context";
 import { cn } from "@/lib/utils";
@@ -18,16 +18,6 @@ const NAV = [
   { href: "/ayuda", label: "Ayuda", icon: LifeBuoy },
 ];
 
-/** Menú principal de escritorio. */
-const CATEGORIES: Array<{ href: string; label: string; icon: typeof Gem }> = [
-  { href: "/", label: "Inicio", icon: Home },
-  { href: "/recargas", label: "Diamantes", icon: Gem },
-  { href: "/cuentas", label: "Cuentas", icon: Users },
-  { href: "/pedido", label: "Seguimiento", icon: Radar },
-  { href: "/medios-de-pago", label: "Pagos", icon: CreditCard },
-  { href: "/ayuda", label: "Ayuda", icon: LifeBuoy },
-];
-
 type Props = {
   storeName: string;
   logoUrl?: string;
@@ -38,12 +28,12 @@ type Props = {
 
 export function SiteHeader({ storeName, logoUrl, user, showAccounts = true }: Props) {
   const nav = showAccounts ? NAV : NAV.filter((n) => n.href !== "/cuentas");
-  const categories = showAccounts ? CATEGORIES : CATEGORIES.filter((n) => n.href !== "/cuentas");
   const pathname = usePathname();
   const { items, ready } = useCart();
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const searchRef = useRef<HTMLInputElement>(null);
   const mobileSearchRef = useRef<HTMLInputElement>(null);
   const headerRef = useRef<HTMLElement>(null);
   const [menuTop, setMenuTop] = useState(68);
@@ -104,6 +94,7 @@ export function SiteHeader({ storeName, logoUrl, user, showAccounts = true }: Pr
     const onChange = () => {
       if (mq.matches) {
         setOpen(false);
+        setSearchOpen(false);
       }
     };
     mq.addEventListener("change", onChange);
@@ -118,8 +109,11 @@ export function SiteHeader({ storeName, logoUrl, user, showAccounts = true }: Pr
       }
       if (e.key === "/" && !(e.target as HTMLElement)?.closest("input,textarea,select")) {
         e.preventDefault();
-        setOpen(false);
-        setSearchOpen(true);
+        if (window.matchMedia("(min-width: 768px)").matches) searchRef.current?.focus();
+        else {
+          setOpen(false);
+          setSearchOpen(true);
+        }
       }
     };
     window.addEventListener("keydown", onKey);
@@ -154,39 +148,46 @@ export function SiteHeader({ storeName, logoUrl, user, showAccounts = true }: Pr
       ref={headerRef}
       className={cn(
         "sticky top-0 z-40 transition-[background,box-shadow,backdrop-filter] duration-300",
-        "border-b",
-        scrolled || open ? "border-white/[0.08] bg-ink-950/85 backdrop-blur-lg" : "border-transparent bg-ink-950",
+        scrolled || open ? "bg-ink-950/75 shadow-[0_1px_0_0_rgb(255_255_255/0.06),0_16px_40px_-24px_rgb(0_0_0/0.9)] backdrop-blur-xl backdrop-saturate-150" : "bg-transparent",
       )}
     >
-      <div className="mx-auto flex h-[64px] max-w-[1240px] items-center gap-3 px-4 sm:h-[68px] sm:px-6 lg:gap-8 lg:px-8">
-        <Link href="/" className="-ml-1 shrink-0 rounded-xl" aria-label={`${storeName} — inicio`}>
+      <div className="mx-auto flex h-[60px] max-w-[1240px] items-center gap-3 px-4 sm:h-[72px] sm:px-6 lg:px-8">
+        <Link href="/" className="-ml-1 shrink-0 rounded-lg transition-opacity hover:opacity-90" aria-label={`${storeName} — inicio`}>
           <Logo name={storeName} logoUrl={logoUrl} />
         </Link>
 
-        {/* Menú principal (escritorio). */}
-        <nav aria-label="Principal" className="hidden items-center gap-1 lg:flex">
-          {categories.map(({ href, label }) => {
+        {/* Navegación principal: texto limpio; la sección activa se marca con una línea azul en el borde inferior. */}
+        <span aria-hidden className="ml-5 hidden h-6 w-px bg-white/[0.08] lg:block" />
+        <nav className="ml-3 hidden h-full items-stretch gap-1 lg:flex" aria-label="Principal">
+          {nav.map(({ href, label }) => {
             const active = isActive(href);
             return (
               <Link
                 key={href}
                 href={href}
                 aria-current={active ? "page" : undefined}
-                className={cn(
-                  "inline-flex h-9 items-center rounded-lg px-3 text-[14px] font-medium transition-colors",
-                  active ? "bg-white/[0.07] text-fg" : "text-fg-muted hover:text-fg",
-                )}
+                className={cn("group relative inline-flex items-center px-3 text-[14px] font-medium transition-colors duration-200", active ? "text-fg" : "text-fg-muted hover:text-fg")}
               >
                 {label}
+                <span
+                  aria-hidden
+                  className={cn(
+                    "absolute inset-x-3 bottom-0 h-[2px] rounded-full transition-all duration-300",
+                    active ? "bg-nova-400 opacity-100 shadow-[0_0_14px_1px_rgb(200_240_79/0.65)]" : "bg-white/40 opacity-0 group-hover:opacity-40",
+                  )}
+                />
               </Link>
             );
           })}
         </nav>
 
-        <div className="ml-auto flex shrink-0 items-center justify-end gap-2">
+        <div className="ml-auto flex items-center gap-2">
+          {/* Búsqueda escritorio */}
+          <SearchBox variant="desktop" inputRef={searchRef} showAccounts={showAccounts} />
+
           <button
             type="button"
-            className="grid size-10 place-items-center rounded-lg text-fg-muted transition-colors hover:bg-white/[0.06] hover:text-fg"
+            className="grid size-10 place-items-center rounded-full text-fg-muted transition-colors hover:bg-white/[0.06] hover:text-fg md:hidden"
             aria-label="Buscar"
             aria-expanded={searchOpen}
             onClick={toggleSearch}
@@ -194,51 +195,48 @@ export function SiteHeader({ storeName, logoUrl, user, showAccounts = true }: Pr
             <Search className="size-[18px]" />
           </button>
 
+          {/* Carrito */}
+          <Link
+            href="/carrito"
+            className={cn(
+              "relative grid size-10 place-items-center rounded-full transition-colors",
+              isActive("/carrito") ? "bg-white/[0.08] text-fg" : "text-fg-muted hover:bg-white/[0.06] hover:text-fg",
+            )}
+            aria-label={`Carrito (${count})`}
+          >
+            <ShoppingBag className="size-[18px]" />
+            {count > 0 && (
+              <span className="absolute -right-0.5 -top-0.5 grid min-w-[18px] place-items-center rounded-full bg-nova-400 px-1 text-[10px] font-bold leading-[18px] text-nova-ink ring-2 ring-ink-900">{count}</span>
+            )}
+          </Link>
+
           {user?.staff && (
             <Link
               href="/admin"
               title="Panel de administración"
-              className="hidden size-10 place-items-center rounded-lg text-fg-muted transition-colors hover:bg-white/[0.06] hover:text-fg sm:grid"
+              className="hidden h-10 items-center gap-1.5 rounded-full px-3 text-[13px] font-medium text-fg-muted transition-colors hover:bg-white/[0.06] hover:text-fg sm:inline-flex"
             >
-              <LayoutDashboard className="size-[18px]" />
+              <LayoutDashboard className="size-[18px]" /> <span className="hidden xl:inline">Panel</span>
             </Link>
           )}
 
           {user ? (
-            <Link
-              href="/cuenta"
-              title="Mi cuenta"
-              className="hidden h-10 items-center gap-2 rounded-lg pl-1 pr-3 text-[14px] font-medium transition-colors hover:bg-white/[0.06] sm:inline-flex"
-            >
+            <Link href="/cuenta" className="ml-1 hidden h-10 items-center gap-2 rounded-full pl-1 pr-3 text-[13px] font-medium ring-1 ring-white/[0.08] transition-colors hover:bg-white/[0.06] sm:inline-flex">
               <UserAvatar user={user} size={32} ring={false} />
-              <span className="max-w-24 truncate lg:hidden xl:inline">{user.name && user.name !== "No Name" ? user.name.split(" ")[0] : "Mi cuenta"}</span>
+              <span className="max-w-28 truncate">{user.name && user.name !== "No Name" ? user.name.split(" ")[0] : "Mi cuenta"}</span>
             </Link>
           ) : (
             <Link
               href="/ingresar"
-              className="hidden h-10 items-center gap-2 rounded-lg px-3 text-[14px] font-medium text-fg transition-colors hover:bg-white/[0.06] sm:inline-flex"
+              className="hidden h-10 items-center gap-2 rounded-full bg-nova-400 px-4 text-[13.5px] font-semibold text-nova-ink shadow-[0_1px_0_0_rgb(255_255_255/0.35)_inset,0_6px_20px_-8px_rgb(200_240_79/0.6)] transition-colors hover:bg-nova-300 sm:inline-flex"
             >
-              <LogIn className="size-4" /> <span>Ingresar</span>
+              <LogIn className="size-4" /> Ingresar
             </Link>
           )}
 
-          {/* Carrito con contador. */}
-          <Link
-            href="/carrito"
-            aria-label={`Carrito (${count})`}
-            className="relative grid size-10 place-items-center rounded-lg text-fg transition-colors hover:bg-white/[0.06]"
-          >
-            <ShoppingBag className="size-[19px]" />
-            {count > 0 && (
-              <span key={count} className="absolute right-0.5 top-0.5 grid min-w-[18px] place-items-center rounded-full bg-nova-600 px-1 text-[10.5px] font-semibold leading-[18px] text-white animate-bump">
-                {count}
-              </span>
-            )}
-          </Link>
-
           <button
             type="button"
-            className="grid size-10 place-items-center rounded-lg text-fg transition-colors hover:bg-white/[0.06] lg:hidden"
+            className="grid size-10 place-items-center rounded-full text-fg ring-1 ring-white/[0.08] transition-colors hover:bg-white/[0.06] lg:hidden"
             aria-label={open ? "Cerrar menú" : "Abrir menú"}
             aria-expanded={open}
             aria-controls="mobile-menu"
@@ -256,7 +254,7 @@ export function SiteHeader({ storeName, logoUrl, user, showAccounts = true }: Pr
       {/* Secciones en celular y tablet: fila fija bajo el logo, se desliza de lado; la actual queda marcada. */}
       <nav className="lg:hidden" aria-label="Secciones">
         <div className="mx-auto flex max-w-[1240px] gap-1.5 overflow-x-auto px-4 pb-2.5 [scrollbar-width:none] sm:px-6 [&::-webkit-scrollbar]:hidden">
-          {[{ href: "/", label: "Inicio", icon: Home }, ...nav].map(({ href, label }) => {
+          {[{ href: "/", label: "Inicio", icon: Home }, ...nav].map(({ href, label, icon: Icon }) => {
             const active = isActive(href);
             return (
               <Link
@@ -269,10 +267,11 @@ export function SiteHeader({ storeName, logoUrl, user, showAccounts = true }: Pr
                   setSearchOpen(false);
                 }}
                 className={cn(
-                  "inline-flex h-8 shrink-0 items-center rounded-lg px-3 text-[13.5px] font-medium transition-colors",
-                  active ? "bg-white/[0.08] text-fg" : "text-fg-muted active:bg-white/[0.06]",
+                  "inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full px-3 text-[13px] font-medium ring-1 transition-colors",
+                  active ? "bg-nova-400/12 text-nova-300 ring-nova-400/35" : "text-fg-muted ring-white/[0.08] active:bg-white/[0.06]",
                 )}
               >
+                <Icon className="size-3.5" />
                 {label}
               </Link>
             );
@@ -282,7 +281,7 @@ export function SiteHeader({ storeName, logoUrl, user, showAccounts = true }: Pr
 
       {/* Búsqueda móvil */}
       {searchOpen && (
-        <div className="mx-auto max-w-2xl animate-fade-up px-4 pb-3">
+        <div className="px-4 pb-3 md:hidden">
           <SearchBox variant="mobile" inputRef={mobileSearchRef} onNavigate={() => setSearchOpen(false)} showAccounts={showAccounts} />
         </div>
       )}
@@ -305,7 +304,7 @@ export function SiteHeader({ storeName, logoUrl, user, showAccounts = true }: Pr
                     active ? "bg-white/[0.07] ring-white/12" : "ring-white/[0.05] hover:bg-white/[0.04]",
                   )}
                 >
-                  <span className={cn("grid size-9 place-items-center rounded-xl", active ? "bg-white/[0.08] text-fg" : "bg-white/[0.04] text-fg-muted")}>
+                  <span className={cn("grid size-9 place-items-center rounded-xl", active ? "bg-nova-400/15 text-nova-300" : "bg-white/[0.05] text-fg-muted")}>
                     <Icon className="size-[18px]" />
                   </span>
                   {label}
@@ -315,20 +314,20 @@ export function SiteHeader({ storeName, logoUrl, user, showAccounts = true }: Pr
             })}
             <div className="mt-4 grid grid-cols-2 gap-2">
               {user ? (
-                <Link href="/cuenta" className="flex h-12 items-center justify-center gap-2 rounded-xl bg-white/[0.06] text-sm font-semibold ring-1 ring-white/10">
+                <Link href="/cuenta" className="flex h-12 items-center justify-center gap-2 rounded-full bg-white/[0.06] text-sm font-semibold ring-1 ring-white/10">
                   <UserAvatar user={user} size={26} ring={false} /> Mi cuenta
                 </Link>
               ) : (
-                <Link href="/ingresar" className="flex h-12 items-center justify-center gap-2 rounded-xl bg-nova-600 text-sm font-semibold text-white">
+                <Link href="/ingresar" className="flex h-12 items-center justify-center gap-2 rounded-full bg-nova-400 text-sm font-semibold text-nova-ink">
                   <LogIn className="size-4" /> Ingresar
                 </Link>
               )}
               {user?.staff ? (
-                <Link href="/admin" className="flex h-12 items-center justify-center gap-2 rounded-xl bg-white/[0.06] text-sm font-semibold ring-1 ring-white/10">
+                <Link href="/admin" className="flex h-12 items-center justify-center gap-2 rounded-full bg-white/[0.06] text-sm font-semibold ring-1 ring-white/10">
                   <LayoutDashboard className="size-4" /> Panel
                 </Link>
               ) : (
-                <Link href="/carrito" className="flex h-12 items-center justify-center gap-2 rounded-xl bg-white/[0.06] text-sm font-semibold ring-1 ring-white/10">
+                <Link href="/carrito" className="flex h-12 items-center justify-center gap-2 rounded-full bg-white/[0.06] text-sm font-semibold ring-1 ring-white/10">
                   <ShoppingBag className="size-4" /> Carrito{count ? ` (${count})` : ""}
                 </Link>
               )}

@@ -1,9 +1,8 @@
 @import "tailwindcss";
 
 /* ------------------------------------------------------------------
-   NOVA DIAMONDS YXJ — sistema visual
-   Negro azulado profundo + acento "nova" (azul neón del logo) con brillo,
-   y cromo plateado para títulos destacados.
+   NOVA DIAMONDS YXJ — sistema visual (mismo diseño de VANTA)
+   Grafito profundo + acento "nova" (azul del logo) usado con medida.
    ------------------------------------------------------------------ */
 @theme {
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
@@ -11,18 +10,18 @@
   --font-brand: var(--font-orbitron), var(--font-sora), ui-sans-serif, sans-serif;
   --font-mono: var(--font-mono-face), ui-monospace, "SFMono-Regular", monospace;
 
-  --color-ink-950: #08090c;
-  --color-ink-900: #0e1014;
-  --color-ink-850: #13151a;
-  --color-ink-800: #181b21;
-  --color-ink-750: #1e2128;
-  --color-ink-700: #262a32;
-  --color-ink-600: #313641;
-  --color-ink-500: #3f4552;
+  --color-ink-950: #0b0d11;
+  --color-ink-900: #0f1116;
+  --color-ink-850: #13161c;
+  --color-ink-800: #171a21;
+  --color-ink-750: #1c2029;
+  --color-ink-700: #232833;
+  --color-ink-600: #2d3340;
+  --color-ink-500: #3b4251;
 
-  --color-fg: #f2f4f7;
-  --color-fg-muted: #a8aeb9;
-  --color-fg-subtle: #878e9b; /* contraste ≥ 4.5:1 sobre todos los fondos (WCAG AA) */
+  --color-fg: #eef1f5;
+  --color-fg-muted: #a0a8b6;
+  --color-fg-subtle: #818a99; /* contraste ≥ 4.5:1 sobre todos los fondos (WCAG AA) */
 
   --color-nova-200: #c7ecff;
   --color-nova-300: #7fd4ff;
@@ -30,18 +29,15 @@
   --color-nova-500: #1484f0;
   --color-nova-600: #0d5fd1;
   --color-nova-ink: #03101f;
+  --color-plasma-400: #8b6cff;
 
-  --color-sky-400: #5ee7ff;
+  --color-sky-400: #6cb4ff;
   --color-ok-400: #45d99b;
   --color-warn-400: #f4b84a;
   --color-bad-400: #ff6b6b;
 
-  --radius-card: 14px;
-  --radius-ctl: 10px;
-
-  --color-plasma-400: #8b6cff; /* violeta de nebulosa, acento secundario */
-  --color-plasma-500: #6d4dff;
-  --color-cyan-glow: #5ee7ff;
+  --radius-card: 12px;
+  --radius-ctl: 8px;
 
   --shadow-card: 0 1px 0 0 rgb(255 255 255 / 0.04) inset, 0 10px 30px -12px rgb(0 0 0 / 0.6);
   --shadow-lift: 0 1px 0 0 rgb(255 255 255 / 0.06) inset, 0 22px 50px -18px rgb(0 0 0 / 0.75);
@@ -57,11 +53,6 @@
   --animate-pop-in: pop-in 0.18s cubic-bezier(0.2, 0.8, 0.2, 1) both;
   --animate-pop-out: pop-out 0.14s ease-in both;
   --animate-feed-in: feed-in 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) both;
-  --animate-page-in: page-in 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
-  --animate-orbit: orbit 18s linear infinite;
-  --animate-orbit-rev: orbit 26s linear infinite reverse;
-  --animate-bump: bump 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
-  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
 
   @keyframes fade-up {
     from { opacity: 0; transform: translateY(8px); }
@@ -103,26 +94,6 @@
     from { transform: translateX(48px); opacity: 0; }
     to { transform: none; opacity: 1; }
   }
-  @keyframes page-in {
-    from { opacity: 0; transform: translate3d(0, 18px, 0); filter: blur(6px); }
-    to { opacity: 1; transform: none; filter: none; }
-  }
-  @keyframes bump {
-    0% { transform: scale(0.4); }
-    60% { transform: scale(1.18); }
-    100% { transform: scale(1); }
-  }
-  @keyframes orbit {
-    to { transform: rotate(360deg); }
-  }
-  @keyframes drift {
-    from { background-position: 0 0, 0 0; }
-    to { background-position: 0 -600px, 0 -400px; }
-  }
-  @keyframes scan {
-    0% { transform: translateY(-100%); }
-    100% { transform: translateY(100%); }
-  }
   @keyframes streak {
     0% { transform: translateX(-120%); opacity: 0; }
     20% { opacity: 1; }
@@ -142,16 +113,13 @@
   html, body { overflow-x: clip; }
   body {
     overflow-wrap: break-word;
-    /* Espacio profundo: nebulosas azul y violeta fijas detrás de todo. */
-    background: var(--color-ink-950);
+    background-color: var(--color-ink-900);
     color: var(--color-fg);
     font-family: var(--font-sans);
     font-feature-settings: "cv11", "ss01";
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
   }
-  /* Casillas, radios y deslizadores nativos con el azul de la marca */
-  input, progress { accent-color: var(--color-nova-400); }
   ::selection {
     background: var(--color-nova-400);
     color: var(--color-nova-ink);
@@ -163,7 +131,7 @@
   }
   h1, h2, h3, h4 {
     font-family: var(--font-display);
-    letter-spacing: -0.025em;
+    letter-spacing: -0.02em;
     text-wrap: balance;
   }
   input[type="number"]::-webkit-inner-spin-button,
@@ -171,40 +139,18 @@
 }
 
 @layer components {
-  /* Superficie estándar: fondo sólido y borde fino, sin brillos. */
+  /* Superficie estándar de tarjeta */
   .surface {
-    border: 1px solid rgb(255 255 255 / 0.08);
-    border-radius: var(--radius-card);
-    background: var(--color-ink-900);
-  }
-  .surface-flat {
+    background: linear-gradient(180deg, rgb(255 255 255 / 0.025), rgb(255 255 255 / 0) 40%), var(--color-ink-800);
     border: 1px solid rgb(255 255 255 / 0.07);
     border-radius: var(--radius-card);
-    background: var(--color-ink-900);
+    box-shadow: var(--shadow-card);
   }
-  /* Antes eran esquinas cortadas; ahora esquinas suaves y consistentes en toda la tienda. */
-  .chamfer { border-radius: 12px; }
-  .chamfer-sm { border-radius: 8px; }
-  /* Énfasis de texto: hereda el color (sin degradados). */
-  .text-nebula { color: inherit; }
-  /* Botón principal: azul sólido, texto blanco. */
-  .btn-nova {
-    background: var(--color-nova-600);
-    color: #fff;
-    border-radius: 10px;
-    transition: background 0.15s;
-  }
-  .btn-nova:hover { background: var(--color-nova-500); }
-  /* Tarjeta de producto: fondo sólido y borde que se aclara al pasar el mouse. */
-  .card-product {
+  .surface-flat {
+    background: var(--color-ink-850);
+    border: 1px solid rgb(255 255 255 / 0.06);
     border-radius: var(--radius-card);
-    background: var(--color-ink-900);
-    border: 1px solid rgb(255 255 255 / 0.08);
-    transition: border-color 0.15s, background 0.15s;
   }
-  .card-product:hover { border-color: rgb(255 255 255 / 0.2); background: var(--color-ink-850); }
-  .text-chrome { color: var(--color-fg); }
-  .glow-nova { box-shadow: 0 0 0 1px rgb(255 255 255 / 0.16); }
   .hairline { border-color: rgb(255 255 255 / 0.07); }
 
   /* Etiqueta pequeña tipo "eyebrow" */
@@ -214,7 +160,14 @@
     color: var(--color-fg-subtle);
   }
 
-  .bg-grid { display: none; }
+  /* Rejilla técnica sutil para fondos */
+  .bg-grid {
+    background-image:
+      linear-gradient(rgb(255 255 255 / 0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(255 255 255 / 0.035) 1px, transparent 1px);
+    background-size: 44px 44px;
+    mask-image: radial-gradient(ellipse at 60% 40%, black 20%, transparent 70%);
+  }
 
   .skeleton {
     background: linear-gradient(90deg, var(--color-ink-750) 0%, var(--color-ink-700) 50%, var(--color-ink-750) 100%);
@@ -314,30 +267,20 @@
   body:has([aria-label="Chat de entrega"]) .wa-float { display: none; }
 }
 
-/* Barras de scroll de toda la tienda: finas, redondeadas, sin carril; se iluminan en azul neón al agarrarlas. */
-:root {
-  --barra: rgb(255 255 255 / 0.16);
-  --barra-encima: rgb(255 255 255 / 0.32);
-  --barra-activa: var(--color-nova-400);
+/* Scroll fino con los colores de la tienda (listas de los filtros y paneles). */
+.scroll-thin {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(255 255 255 / 0.14) transparent;
 }
-@supports not selector(::-webkit-scrollbar) {
-  * { scrollbar-width: thin; scrollbar-color: var(--barra) transparent; }
-}
-::-webkit-scrollbar { width: 10px; height: 10px; }
-::-webkit-scrollbar-track,
-::-webkit-scrollbar-corner { background: transparent; }
-::-webkit-scrollbar-thumb {
-  border: 3px solid transparent;
+.scroll-thin::-webkit-scrollbar { width: 8px; height: 8px; }
+.scroll-thin::-webkit-scrollbar-track { background: transparent; }
+.scroll-thin::-webkit-scrollbar-thumb {
+  background: rgb(255 255 255 / 0.14);
+  border: 2px solid transparent;
   border-radius: 999px;
-  background: var(--barra) padding-box;
+  background-clip: padding-box;
 }
-::-webkit-scrollbar-thumb:hover { background: var(--barra-encima) padding-box; }
-::-webkit-scrollbar-thumb:active { background: var(--barra-activa) padding-box; }
-/* Compatibilidad: listas que ya usaban la clase. */
-.scroll-thin { overscroll-behavior: contain; }
-
-/* Antes un brillo cruzaba el botón; se deja la clase sin efecto. */
-.btn-shine { position: relative; }
+.scroll-thin::-webkit-scrollbar-thumb:hover { background-color: var(--color-nova-500); }
 
 /* Tablas del panel en celular: cada fila es una tarjeta y cada celda muestra el título de su columna
    (data-label lo pone ResponsiveTable). La primera celda hace de encabezado de la tarjeta. */
@@ -385,4 +328,14 @@
   input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"]),
   select,
   textarea { font-size: 16px; }
+}
+
+/* Acceso del equipo (pantalla propia de Nova): esquinas cortadas y texto con degradado. */
+.chamfer { clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px); }
+.chamfer-sm { clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px); }
+.text-nebula {
+  background: linear-gradient(90deg, #7fe3ff, #29a8ff 45%, #8b6cff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }

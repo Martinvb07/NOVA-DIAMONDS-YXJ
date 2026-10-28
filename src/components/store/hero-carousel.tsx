@@ -27,7 +27,7 @@ export function HeroCarousel({ banners }: { banners: Banner[] }) {
   return (
     <section aria-roledescription="carrusel" aria-label="Promociones">
       <div
-        className="group relative overflow-hidden rounded-[6px] shadow-[0_24px_60px_-30px_rgba(0,0,0,0.9)] ring-1 ring-white/10"
+        className="group relative overflow-hidden rounded-[18px] shadow-[0_24px_60px_-30px_rgba(0,0,0,0.9)] ring-1 ring-white/10"
         onMouseEnter={() => setPaused(true)}
         onMouseLeave={() => setPaused(false)}
         onTouchStart={(e) => {
@@ -85,7 +85,7 @@ export function HeroCarousel({ banners }: { banners: Banner[] }) {
               onClick={() => setI(idx)}
               aria-label={`Ir al banner ${idx + 1}`}
               aria-current={idx === i}
-              className={cn("h-[3px] rounded-full transition-all duration-300", idx === i ? "w-10 bg-nova-400 shadow-[0_0_10px_rgb(41_168_255/0.9)]" : "w-10 bg-white/20 hover:bg-white/40")}
+              className={cn("h-1.5 rounded-full transition-all duration-300", idx === i ? "w-6 bg-white" : "w-1.5 bg-white/25 hover:bg-white/50")}
             />
           ))}
         </div>

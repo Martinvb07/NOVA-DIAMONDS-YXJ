@@ -127,7 +127,7 @@ export function SearchBox({ variant, inputRef, onNavigate, showAccounts = true }
   let idx = -1;
 
   return (
-    <div ref={boxRef} role="search" className={cn("group relative", desktop ? "hidden min-[1600px]:block" : "w-full")}>
+    <div ref={boxRef} role="search" className={cn("group relative", desktop ? "hidden md:block" : "w-full")}>
       <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-fg-subtle transition-colors group-focus-within:text-nova-300" aria-hidden />
       <input
         ref={inputRef}
@@ -151,7 +151,7 @@ export function SearchBox({ variant, inputRef, onNavigate, showAccounts = true }
         className={cn(
           "text-fg placeholder:text-fg-subtle focus:outline-none [&::-webkit-search-cancel-button]:hidden",
           desktop
-            ? "h-10 w-44 rounded-full border border-transparent bg-white/[0.05] pl-10 pr-10 text-[13px] transition-[width,border-color,background] duration-300 hover:bg-white/[0.07] focus:w-60 focus:border-nova-400/50 focus:bg-ink-850"
+            ? "h-10 w-48 rounded-full border border-transparent bg-white/[0.05] pl-10 pr-10 text-[13px] transition-[width,border-color,background] duration-300 hover:bg-white/[0.07] focus:w-72 focus:border-nova-400/50 focus:bg-ink-850 xl:w-60"
             : "h-11 w-full rounded-full border border-white/10 bg-ink-850 pl-10 pr-10 text-[14px] focus:border-nova-400/50",
         )}
       />

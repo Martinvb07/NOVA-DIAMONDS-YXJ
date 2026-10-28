@@ -1,19 +1,18 @@
 import Link from "next/link";
+import { ChevronRight, ClipboardList, CreditCard, Gem as GemIcon, LifeBuoy, Radar, Users } from "lucide-react";
 import { JsonLd } from "@/components/seo/json-ld";
 import { AccountGridCard } from "@/components/store/account-listing";
 import { HeroCarousel } from "@/components/store/hero-carousel";
-import { tierFor } from "@/components/brand/covers";
+import { DiamondCover, tierFor } from "@/components/brand/covers";
 import { RankEmblem } from "@/components/brand/rank-emblem";
+import { ProductTile } from "@/components/store/product-tile";
 import { FF_RANKS } from "@/domain/freefire";
 import { formatNumber, packageTitle } from "@/lib/money";
 import { db } from "@/lib/db";
+import { BannerSlot } from "@/components/store/banner-slot";
 import { LivePurchases } from "@/components/store/live-purchases";
 import { Container } from "@/components/ui/primitives";
-import { ShopCell, type ShopItem } from "@/components/store/home/shop-cell";
-import { ShowcaseHero } from "@/components/store/home/showcase-hero";
-import { Guarantee, HowItWorks, SectionTitle } from "@/components/store/home/nova-sections";
-import { PRODUCT_LABELS } from "@/domain/labels";
-import type { PackageView } from "@/server/catalog";
+import { cn } from "@/lib/utils";
 import { env } from "@/lib/env";
 import { accountsVisible, getAccountFacets, getAccounts, getPackages, getLiveDeliveries } from "@/server/catalog";
 import { getSettings } from "@/server/settings";
@@ -24,36 +23,39 @@ export const metadata: Metadata = { alternates: { canonical: "/" } };
 
 export const dynamic = "force-dynamic";
 
-type Pkg = PackageView & { quote: { price: number; original: number | null; discountPct: number } };
-
-function packageItem(p: Pkg): ShopItem {
-  return {
-    key: `p-${p.id}`,
-    href: `/recargas?paquete=${p.slug}`,
-    title: packageTitle(p.diamonds, p.bonusDiamonds),
-    sub: `Recibes ${formatNumber(p.diamonds + p.bonusDiamonds)} diamantes`,
-    price: p.quote.price,
-    original: p.quote.original,
-    currency: p.currency,
-    badge: PRODUCT_LABELS[p.label] ?? (p.quote.discountPct ? `−${p.quote.discountPct}%` : null),
-    disabled: !p.available,
-    cta: "Recargar ahora",
-    cover: { kind: "diamond", tier: tierFor(p.diamonds), diamonds: p.diamonds, bonus: p.bonusDiamonds },
-  };
+function RowHead({ title, sub, href, cta }: { title: string; sub?: string; href?: string; cta?: string }) {
+  return (
+    <div className="mb-4 flex items-end justify-between gap-4 sm:mb-5">
+      <div>
+        <h2 className="text-[20px] font-extrabold leading-tight tracking-tight sm:text-[26px]">{title}</h2>
+        {sub && <p className="mt-0.5 text-[13px] text-fg-subtle">{sub}</p>}
+      </div>
+      {href && (
+        <Link href={href} className="inline-flex h-9 shrink-0 items-center gap-1 rounded-full bg-white/[0.05] pl-3.5 pr-2.5 text-[13px] font-medium text-fg-muted ring-1 ring-white/[0.08] hover:bg-white/10 hover:text-fg">
+          {cta ?? "Ver todo"} <ChevronRight className="size-4" />
+        </Link>
+      )}
+    </div>
+  );
 }
+
+const SHORTCUTS = [
+  { href: "/recargas", icon: GemIcon, label: "Diamantes" },
+  { href: "/cuentas", icon: Users, label: "Cuentas" },
+  { href: "/pedido", icon: Radar, label: "Rastrear pedido" },
+  { href: "/cuenta", icon: ClipboardList, label: "Mis pedidos" },
+  { href: "/medios-de-pago", icon: CreditCard, label: "Medios de pago" },
+  { href: "/ayuda", icon: LifeBuoy, label: "Ayuda" },
+];
 
 export default async function HomePage() {
   const [packages, accounts, recent, settings, facets, heroBanners] = await Promise.all([getPackages(), getAccounts({ onlyAvailable: false, take: 12 }), getLiveDeliveries(10).catch(() => ({ items: [], stats: { today: 0, diamonds30d: 0 } })), getSettings(), getAccountFacets(), db.promoBanner.findMany({ where: { placement: "TOP", active: true }, orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }], select: { id: true, title: true, imageUrl: true, imageMobileUrl: true, href: true } }).catch(() => [])]);
   const showAccounts = await accountsVisible();
   const visibleAccounts = showAccounts ? accounts.filter((a) => a.available || a.reservedTemporarily) : [];
+  const shortcuts = showAccounts ? SHORTCUTS : SHORTCUTS.filter((s) => s.href !== "/cuentas");
   const bonusPct = packages[0]?.diamonds ? Math.round((packages[0].bonusDiamonds / packages[0].diamonds) * 100) : 0;
   const rankChips = [...FF_RANKS].reverse().filter((r) => facets.rankCounts[r.id]);
 
-  const pkgItems = packages.map(packageItem);
-  // Portada: el paquete recomendado (o el del medio) y el precio más bajo disponible.
-  const live = packages.filter((p) => p.available);
-  const star = live.find((p) => p.label === "RECOMMENDED" || p.label === "BEST_SELLER") ?? live[Math.floor(live.length / 2)];
-  const cheapest = live.reduce<Pkg | null>((m, p) => (!m || p.quote.price < m.quote.price ? p : m), null);
   return (
     <>
       <JsonLd
@@ -66,55 +68,82 @@ export default async function HomePage() {
           ...(settings.supportEmail ? { email: settings.supportEmail } : {}),
         }}
       />
-      <Container className="space-y-16 pb-4 pt-2 sm:space-y-24 sm:pb-8">
-        {star && cheapest ? (
-          <ShowcaseHero
-            pkg={{ href: `/recargas?paquete=${star.slug}`, price: star.quote.price, currency: star.currency, tier: tierFor(star.diamonds), diamonds: star.diamonds, bonus: star.bonusDiamonds }}
-            from={{ price: cheapest.quote.price, currency: cheapest.currency }}
-          />
-        ) : (
-          <>
-            <h1 className="sr-only">{showAccounts ? "Diamantes y cuentas de Free Fire en Colombia" : "Recarga de diamantes de Free Fire en Colombia"}</h1>
-            {heroBanners.length > 0 && <HeroCarousel banners={heroBanners} />}
-          </>
-        )}
+      <h1 className="sr-only">{showAccounts ? "Diamantes y cuentas de Free Fire en Colombia" : "Recarga de diamantes de Free Fire en Colombia"}</h1>
 
-        {pkgItems.length > 0 && (
-          <section id="diamantes" aria-labelledby="paquetes" className="scroll-mt-24">
-            <SectionTitle
-              title="Paquetes de diamantes"
-              sub={bonusPct ? `Todos incluyen +${bonusPct}% de bonus. Precio final en pesos colombianos.` : "Precio final en pesos colombianos."}
-              href="/recargas"
-              cta="Ir a recargar"
-            />
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-6">
-              {pkgItems.map((it) => (
-                <ShopCell key={it.key} item={it} />
+      <Container className="space-y-8 pb-2 pt-4 sm:space-y-12 sm:pb-6 sm:pt-7">
+        <div className="space-y-5">
+          {heroBanners.length > 0 && <HeroCarousel banners={heroBanners} />}
+
+          {/* Accesos rápidos */}
+          {/* Celular: fila deslizable de íconos tipo app. Escritorio: rejilla de tarjetas. */}
+          <nav
+            aria-label="Accesos rápidos"
+            className={cn(
+              "-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:grid sm:gap-3 sm:overflow-visible sm:px-0 sm:pb-0",
+              shortcuts.length === 6 ? "sm:grid-cols-6" : "sm:grid-cols-5",
+            )}
+          >
+            {shortcuts.map(({ href, icon: Icon, label }) => (
+              <Link
+                key={label}
+                href={href}
+                className="group flex w-[76px] shrink-0 snap-start flex-col items-center gap-2 text-center sm:w-auto sm:justify-center sm:rounded-[14px] sm:bg-ink-850 sm:px-2 sm:py-4 sm:ring-1 sm:ring-white/[0.06] sm:transition sm:hover:bg-ink-800 sm:hover:ring-white/15"
+              >
+                <span className="grid size-14 place-items-center rounded-[18px] bg-gradient-to-b from-ink-750 to-ink-850 shadow-[0_1px_0_0_rgb(255_255_255/0.06)_inset] ring-1 ring-white/[0.07] transition active:scale-95 sm:size-auto sm:bg-none sm:shadow-none sm:ring-0">
+                  <Icon className="size-6 text-nova-300 transition-transform group-hover:-translate-y-0.5" strokeWidth={2.2} />
+                </span>
+                <span className="text-[12px] font-medium leading-tight text-fg-muted sm:text-[13px] sm:text-fg">{label}</span>
+              </Link>
+            ))}
+          </nav>
+        </div>
+
+        {/* Recargas */}
+        {packages.length > 0 && (
+          <section id="diamantes" className="scroll-mt-24">
+            <RowHead title="Recargas de diamantes" sub={bonusPct ? `Todos con +${bonusPct}% de bonus · precio final en pesos` : "Precio final en pesos"} href="/recargas" cta="Ver todo" />
+            <div className="grid grid-cols-2 gap-x-3 gap-y-5 min-[480px]:grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 lg:gap-x-4">
+              {packages.map((p) => (
+                <ProductTile
+                  key={p.id}
+                  href={`/recargas?paquete=${p.slug}`}
+                  cover={<DiamondCover tier={tierFor(p.diamonds)} diamonds={p.diamonds} bonus={p.bonusDiamonds} />}
+                  title={packageTitle(p.diamonds, p.bonusDiamonds)}
+                  meta={`Recibes ${formatNumber(p.diamonds + p.bonusDiamonds)} diamantes`}
+                  price={p.quote.price}
+                  original={p.quote.original}
+                  currency={p.currency}
+                  label={p.label}
+                  isDemo={p.isDemo}
+                  disabled={!p.available}
+                />
               ))}
             </div>
           </section>
         )}
 
-        <HowItWorks />
-
         {/* Compras en vivo: últimas 10 compras pagadas (reales), se actualiza sola */}
         <LivePurchases initial={recent} />
+
+        <BannerSlot slot="HOME_TRUST" variant="wide" label="Cómo comprar" />
 
         {/* Cuentas */}
         {visibleAccounts.length > 0 && (
           <section>
-            <SectionTitle title="Cuentas destacadas" sub="Cada cuenta es única y su procedencia se revisa antes de publicarla." href="/cuentas" cta="Ver todas las cuentas" />
+            <RowHead title="Cuentas destacadas" sub="Cada cuenta es única · procedencia revisada antes de publicar" href="/cuentas" cta="Ver catálogo" />
             {rankChips.length > 1 && (
               <nav aria-label="Cuentas por rango" className="-mx-1 mb-5 flex gap-2 overflow-x-auto px-1 py-1 [scrollbar-width:none]">
                 {rankChips.map((r) => (
                   <Link
                     key={r.id}
                     href={`/cuentas?rango=${r.id}`}
-                    className="group flex h-10 shrink-0 items-center gap-2 rounded-lg border border-white/[0.08] bg-ink-900 pl-1.5 pr-3 text-[14px] font-medium transition-colors hover:border-white/20"
+                    className="group flex h-11 shrink-0 items-center gap-2 rounded-full bg-ink-850 pl-1.5 pr-3.5 text-[13.5px] font-semibold ring-1 ring-white/[0.08] transition hover:bg-ink-800 hover:ring-white/20"
                   >
-                    <RankEmblem rank={r.id} className="size-6" />
+                    <span className="grid size-8 place-items-center rounded-full bg-white/[0.05]">
+                      <RankEmblem rank={r.id} className="size-6 transition-transform group-hover:scale-110" />
+                    </span>
                     {r.label}
-                    <span className="text-[12px] tabular-nums text-fg-subtle">{facets.rankCounts[r.id]}</span>
+                    <span className="rounded-full bg-white/[0.06] px-1.5 py-0.5 text-[11px] font-medium tabular-nums text-fg-subtle">{facets.rankCounts[r.id]}</span>
                   </Link>
                 ))}
               </nav>
@@ -127,7 +156,7 @@ export default async function HomePage() {
           </section>
         )}
 
-        <Guarantee />
+        <BannerSlot slot="HOME_BOTTOM" variant="wide" label="Compra con confianza" />
       </Container>
     </>
   );
