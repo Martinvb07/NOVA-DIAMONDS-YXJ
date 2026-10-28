@@ -1,6 +1,6 @@
 name: Endurecer nginx (ocultar versión)
 
-# Manual. Agrega «server_tokens off;» a los bloques server de nova.llanostudio.co para que nginx no anuncie su
+# Manual. Agrega «server_tokens off;» a los bloques server de novadiamonds.co para que nginx no anuncie su
 # versión exacta. Solo toca los archivos de esta tienda (no los de otros proyectos del VPS): guarda una
 # copia, valida con «nginx -t» y, si algo falla, restaura la copia sin recargar.
 on:
@@ -37,8 +37,8 @@ jobs:
           ssh -i ~/.ssh/deploy_key -o BatchMode=yes -o ConnectTimeout=15 "$VPS_USER@$VPS_HOST" 'bash -s' <<'ENDSSH'
           set -euo pipefail
           S=""; [ "$(id -u)" -ne 0 ] && S="sudo -n"
-          archivos=$($S grep -lRE 'server_name[^;]*nova\.llanostudio\.co' /etc/nginx/sites-enabled /etc/nginx/conf.d 2>/dev/null | xargs -r -n1 readlink -f | sort -u)
-          [ -n "$archivos" ] || { echo "No encontré la configuración de nova.llanostudio.co"; exit 1; }
+          archivos=$($S grep -lRE 'server_name[^;]*novadiamonds\.co' /etc/nginx/sites-enabled /etc/nginx/conf.d 2>/dev/null | xargs -r -n1 readlink -f | sort -u)
+          [ -n "$archivos" ] || { echo "No encontré la configuración de novadiamonds.co"; exit 1; }
           sello=$(date +%Y%m%d-%H%M%S)
           $S mkdir -p /var/backups/nginx-novadiamonds
           cambiados=""
@@ -46,7 +46,7 @@ jobs:
             echo "== $(basename "$f")"
             if $S grep -q 'server_tokens off' "$f"; then echo "  ya tenía server_tokens off"; continue; fi
             $S cp -a "$f" "/var/backups/nginx-novadiamonds/$(basename "$f").$sello"
-            $S sed -i -E '/^[[:space:]]*server_name[^;]*nova\.llanostudio\.co[^;]*;/a\    server_tokens off;' "$f"
+            $S sed -i -E '/^[[:space:]]*server_name[^;]*novadiamonds\.co[^;]*;/a\    server_tokens off;' "$f"
             echo "  agregado en $($S grep -c 'server_tokens off' "$f") bloque(s)"
             cambiados="$cambiados $f"
           done
@@ -64,6 +64,6 @@ jobs:
       - name: Comprobar desde internet
         run: |
           sleep 3
-          echo "Cabecera Server ahora: $(curl -sI --max-time 20 https://nova.llanostudio.co/ | grep -i '^server:' | tr -d '\r')"
-          code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 https://nova.llanostudio.co/)
+          echo "Cabecera Server ahora: $(curl -sI --max-time 20 https://novadiamonds.co/ | grep -i '^server:' | tr -d '\r')"
+          code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 https://novadiamonds.co/)
           echo "Inicio responde: $code"; [ "$code" = "200" ]
