@@ -43,12 +43,6 @@ export function TrackForm({ prefix }: { prefix: string }) {
           />
         </span>
       </label>
-      {/* Corte de ticket */}
-      <div className="relative -mx-5 py-1 sm:-mx-7" aria-hidden>
-        <span className="absolute -left-2.5 top-1/2 size-5 -translate-y-1/2 rounded-full bg-ink-900" />
-        <span className="absolute -right-2.5 top-1/2 size-5 -translate-y-1/2 rounded-full bg-ink-900" />
-        <span className="mx-5 block border-t-2 border-dashed border-white/[0.09]" />
-      </div>
       <label className="block">
         <span className="mb-1.5 block text-[13px] font-medium">Correo con el que compraste</span>
         <input name="email" type="email" required autoComplete="email" placeholder="tu@correo.com" className="field h-12 bg-ink-900" />

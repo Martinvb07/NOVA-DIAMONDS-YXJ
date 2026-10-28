@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal, flushSync } from "react-dom";
 import { ChevronDown, ChevronRight, CreditCard, Gem, Home, LayoutDashboard, LifeBuoy, LogIn, Menu, Radar, Search, ShoppingBag, Users, X } from "lucide-react";
 import { Logo } from "@/components/brand/logo";
@@ -18,7 +18,7 @@ const NAV = [
   { href: "/ayuda", label: "Ayuda", icon: LifeBuoy },
 ];
 
-/** Menú principal de escritorio (centrado). Una píldora neón se desliza hasta el enlace activo o el que tiene el mouse. */
+/** Menú principal de escritorio. */
 const CATEGORIES: Array<{ href: string; label: string; icon: typeof Gem }> = [
   { href: "/", label: "Inicio", icon: Home },
   { href: "/recargas", label: "Diamantes", icon: Gem },
@@ -42,7 +42,6 @@ export function SiteHeader({ storeName, logoUrl, user, showAccounts = true }: Pr
   const pathname = usePathname();
   const { items, ready } = useCart();
   const [scrolled, setScrolled] = useState(false);
-  const [compact, setCompact] = useState(false);
   const [open, setOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const mobileSearchRef = useRef<HTMLInputElement>(null);
@@ -50,14 +49,7 @@ export function SiteHeader({ storeName, logoUrl, user, showAccounts = true }: Pr
   const [menuTop, setMenuTop] = useState(68);
 
   useEffect(() => {
-    // Las barras de arriba se pliegan con histéresis: se esconden pasados 100 px y vuelven por debajo de 10.
-    // El margen (90 px) es mayor que lo que miden (64 px); así, en páginas cortas, plegarlas no devuelve
-    // la página bajo el umbral y la navbar no entra en un bucle de abrir/cerrar (parpadeo).
-    const onScroll = () => {
-      const y = window.scrollY;
-      setScrolled(y > 8);
-      setCompact((c) => (c ? y > 10 : y > 100));
-    };
+    const onScroll = () => setScrolled(window.scrollY > 8);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
@@ -157,92 +149,44 @@ export function SiteHeader({ storeName, logoUrl, user, showAccounts = true }: Pr
   const isActive = (href: string) => (href === "/" ? pathname === "/" : pathname.startsWith(href));
   const count = ready ? items.length : 0;
 
-  // Píldora deslizante del menú de escritorio.
-  const navRef = useRef<HTMLElement>(null);
-  const [pill, setPill] = useState<{ left: number; width: number; on: boolean; hover: boolean }>({ left: 0, width: 0, on: false, hover: false });
-  const moveTo = useCallback((el: HTMLElement | null | undefined, hover = false) => {
-    if (!el) return setPill((p) => ({ ...p, on: false, hover: false }));
-    setPill({ left: el.offsetLeft, width: el.offsetWidth, on: true, hover });
-  }, []);
-  const toActive = useCallback(() => moveTo(navRef.current?.querySelector<HTMLElement>('[aria-current="page"]')), [moveTo]);
-  useLayoutEffect(() => {
-    toActive();
-    window.addEventListener("resize", toActive);
-    // Las fuentes cambian el ancho de los enlaces al terminar de cargar.
-    document.fonts?.ready.then(toActive).catch(() => {});
-    return () => window.removeEventListener("resize", toActive);
-  }, [pathname, toActive]);
-
   return (
     <header
       ref={headerRef}
       className={cn(
         "sticky top-0 z-40 transition-[background,box-shadow,backdrop-filter] duration-300",
-        scrolled || open ? "bg-ink-950/75 shadow-[0_1px_0_0_rgb(255_255_255/0.06),0_16px_40px_-24px_rgb(0_0_0/0.9)] backdrop-blur-xl backdrop-saturate-150" : "bg-transparent",
+        "border-b",
+        scrolled || open ? "border-white/[0.08] bg-ink-950/85 backdrop-blur-lg" : "border-transparent bg-ink-950",
       )}
     >
-      {/* Barra superior (escritorio): moneda y país a la izquierda; accesos rápidos a la derecha. Se pliega al bajar. */}
-      <div className={cn("hidden overflow-hidden border-b border-white/[0.05] transition-[height,opacity] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] lg:block", compact ? "h-0 opacity-0" : "h-8 opacity-100")}>
-        <div className="mx-auto flex h-8 max-w-[1240px] items-center gap-5 px-8 text-[11.5px] font-medium text-fg-subtle">
-          <span className="inline-flex items-center gap-1.5">
-            <span className="size-1.5 rounded-full bg-ok-400 shadow-[0_0_8px_rgb(69_217_155/0.9)]" aria-hidden />
-            Entregas activas · COP · Colombia
-          </span>
-          <div className="ml-auto flex items-center gap-5">
-            <Link href="/pedido" className="transition-colors duration-300 hover:text-nova-300">Rastrear pedido</Link>
-            <Link href="/medios-de-pago" className="transition-colors duration-300 hover:text-nova-300">Medios de pago</Link>
-            <Link href="/ayuda" className="transition-colors duration-300 hover:text-nova-300">Ayuda</Link>
-          </div>
-        </div>
-      </div>
-
-      <div className="mx-auto flex h-[64px] max-w-[1240px] items-center gap-3 px-4 sm:h-[72px] sm:px-6 lg:h-[76px] lg:gap-5 lg:px-8">
-        <Link href="/" className="-ml-1 shrink-0 rounded-xl lg:mr-auto" aria-label={`${storeName} — inicio`}>
+      <div className="mx-auto flex h-[64px] max-w-[1240px] items-center gap-3 px-4 sm:h-[68px] sm:px-6 lg:gap-8 lg:px-8">
+        <Link href="/" className="-ml-1 shrink-0 rounded-xl" aria-label={`${storeName} — inicio`}>
           <Logo name={storeName} logoUrl={logoUrl} />
         </Link>
 
-        {/* Menú principal (escritorio), centrado. */}
-        <nav
-          ref={navRef}
-          aria-label="Principal"
-          onMouseLeave={toActive}
-          className="chamfer relative mx-auto hidden shrink-0 items-center gap-0.5 bg-gradient-to-r from-nova-400/[0.06] via-white/[0.02] to-plasma-400/[0.06] p-1 backdrop-blur lg:flex"
-        >
-          <span
-            aria-hidden
-            className={cn(
-              "chamfer-sm absolute inset-y-1 transition-[left,width,opacity,background,box-shadow] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]",
-              pill.hover ? "bg-white/[0.08]" : "bg-gradient-to-r from-nova-400/35 to-plasma-400/25",
-              pill.on ? "opacity-100" : "opacity-0",
-            )}
-            style={{ left: pill.left, width: pill.width }}
-          />
-          {categories.map(({ href, label, icon: Icon }) => {
+        {/* Menú principal (escritorio). */}
+        <nav aria-label="Principal" className="hidden items-center gap-1 lg:flex">
+          {categories.map(({ href, label }) => {
             const active = isActive(href);
             return (
               <Link
                 key={href}
                 href={href}
                 aria-current={active ? "page" : undefined}
-                onMouseEnter={(e) => moveTo(e.currentTarget, !active)}
-                onFocus={(e) => moveTo(e.currentTarget, !active)}
-                onBlur={toActive}
                 className={cn(
-                  "group relative z-10 inline-flex h-9 items-center gap-2 px-3 text-[13px] font-semibold transition-colors duration-300 xl:px-3.5",
-                  active ? "text-white" : "text-fg-muted hover:text-fg",
+                  "inline-flex h-9 items-center rounded-lg px-3 text-[14px] font-medium transition-colors",
+                  active ? "bg-white/[0.07] text-fg" : "text-fg-muted hover:text-fg",
                 )}
               >
-                <Icon className={cn("hidden size-4 transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:-translate-y-0.5 group-hover:scale-110", active && "drop-shadow-[0_0_6px_rgb(41_168_255/0.9)]")} strokeWidth={2} />
                 {label}
               </Link>
             );
           })}
         </nav>
 
-        <div className="ml-auto flex shrink-0 items-center justify-end gap-2 lg:ml-0">
+        <div className="ml-auto flex shrink-0 items-center justify-end gap-2">
           <button
             type="button"
-            className="grid size-10 place-items-center rounded-full text-fg-muted ring-1 ring-white/[0.08] transition-[color,background,box-shadow] duration-300 hover:bg-white/[0.06] hover:text-fg hover:ring-nova-400/40"
+            className="grid size-10 place-items-center rounded-lg text-fg-muted transition-colors hover:bg-white/[0.06] hover:text-fg"
             aria-label="Buscar"
             aria-expanded={searchOpen}
             onClick={toggleSearch}
@@ -254,7 +198,7 @@ export function SiteHeader({ storeName, logoUrl, user, showAccounts = true }: Pr
             <Link
               href="/admin"
               title="Panel de administración"
-              className="hidden size-10 place-items-center rounded-full text-fg-muted ring-1 ring-white/[0.08] transition-[color,background,box-shadow] duration-300 hover:bg-white/[0.06] hover:text-fg hover:ring-nova-400/40 sm:grid"
+              className="hidden size-10 place-items-center rounded-lg text-fg-muted transition-colors hover:bg-white/[0.06] hover:text-fg sm:grid"
             >
               <LayoutDashboard className="size-[18px]" />
             </Link>
@@ -264,7 +208,7 @@ export function SiteHeader({ storeName, logoUrl, user, showAccounts = true }: Pr
             <Link
               href="/cuenta"
               title="Mi cuenta"
-              className="hidden h-10 items-center gap-2 rounded-full pl-1 pr-3 text-[13px] font-semibold ring-1 ring-white/[0.08] transition-[background,box-shadow] duration-300 hover:bg-white/[0.06] hover:ring-nova-400/40 sm:inline-flex"
+              className="hidden h-10 items-center gap-2 rounded-lg pl-1 pr-3 text-[14px] font-medium transition-colors hover:bg-white/[0.06] sm:inline-flex"
             >
               <UserAvatar user={user} size={32} ring={false} />
               <span className="max-w-24 truncate lg:hidden xl:inline">{user.name && user.name !== "No Name" ? user.name.split(" ")[0] : "Mi cuenta"}</span>
@@ -272,38 +216,29 @@ export function SiteHeader({ storeName, logoUrl, user, showAccounts = true }: Pr
           ) : (
             <Link
               href="/ingresar"
-              className="hidden h-10 items-center gap-2 rounded-full px-4 text-[13px] font-semibold text-fg ring-1 lg:px-3 xl:px-4 ring-white/[0.12] transition-[background,box-shadow,color] duration-300 hover:bg-white/[0.06] hover:text-nova-200 hover:ring-nova-400/50 sm:inline-flex"
+              className="hidden h-10 items-center gap-2 rounded-lg px-3 text-[14px] font-medium text-fg transition-colors hover:bg-white/[0.06] sm:inline-flex"
             >
-              <LogIn className="size-4" /> <span className="lg:hidden xl:inline">Ingresar</span>
+              <LogIn className="size-4" /> <span>Ingresar</span>
             </Link>
           )}
 
-          {/* Carrito: botón neón con contador que rebota al cambiar. */}
+          {/* Carrito con contador. */}
           <Link
             href="/carrito"
             aria-label={`Carrito (${count})`}
-            className={cn(
-              "btn-nova btn-shine relative inline-flex h-10 items-center gap-2",
-              "w-10 justify-center lg:w-auto lg:pl-3.5 lg:pr-2",
-            )}
+            className="relative grid size-10 place-items-center rounded-lg text-fg transition-colors hover:bg-white/[0.06]"
           >
-            <ShoppingBag className="size-[18px]" strokeWidth={2.2} />
-            <span className="hidden text-[13px] font-bold lg:inline">Carrito</span>
-            <span
-              key={count}
-              className={cn(
-                "grid min-w-[20px] place-items-center rounded-full bg-ink-950 px-1.5 text-[11px] font-bold leading-[20px] text-nova-200 animate-bump",
-                "absolute right-0.5 top-0.5 lg:static",
-                count === 0 && "max-lg:hidden",
-              )}
-            >
-              {count}
-            </span>
+            <ShoppingBag className="size-[19px]" />
+            {count > 0 && (
+              <span key={count} className="absolute right-0.5 top-0.5 grid min-w-[18px] place-items-center rounded-full bg-nova-600 px-1 text-[10.5px] font-semibold leading-[18px] text-white animate-bump">
+                {count}
+              </span>
+            )}
           </Link>
 
           <button
             type="button"
-            className="grid size-10 place-items-center rounded-full text-fg ring-1 ring-white/[0.08] transition-colors hover:bg-white/[0.06] lg:hidden"
+            className="grid size-10 place-items-center rounded-lg text-fg transition-colors hover:bg-white/[0.06] lg:hidden"
             aria-label={open ? "Cerrar menú" : "Abrir menú"}
             aria-expanded={open}
             aria-controls="mobile-menu"
@@ -318,21 +253,10 @@ export function SiteHeader({ storeName, logoUrl, user, showAccounts = true }: Pr
         </div>
       </div>
 
-      {/* Franja de aviso bajo el encabezado (escritorio). */}
-      <div className={cn("hidden overflow-hidden border-t border-white/[0.05] bg-gradient-to-r from-transparent via-nova-500/[0.07] to-transparent transition-[height,opacity] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] lg:block", compact ? "h-0 opacity-0" : "h-8 opacity-100")}>
-        <p className="mx-auto flex h-8 max-w-[1240px] items-center justify-center gap-2 px-8 text-[11px] font-semibold uppercase tracking-[0.14em] text-fg-muted">
-          <Gem className="size-3.5 text-nova-300" aria-hidden />
-          Diamantes al instante con tu ID · paga en pesos con PSE, Nequi o tarjeta
-          <Link href="/medios-de-pago" className="ml-1 text-nova-300 underline decoration-nova-400/40 underline-offset-4 transition-colors hover:text-nova-200 hover:decoration-nova-300">
-            Ver medios
-          </Link>
-        </p>
-      </div>
-
       {/* Secciones en celular y tablet: fila fija bajo el logo, se desliza de lado; la actual queda marcada. */}
       <nav className="lg:hidden" aria-label="Secciones">
         <div className="mx-auto flex max-w-[1240px] gap-1.5 overflow-x-auto px-4 pb-2.5 [scrollbar-width:none] sm:px-6 [&::-webkit-scrollbar]:hidden">
-          {[{ href: "/", label: "Inicio", icon: Home }, ...nav].map(({ href, label, icon: Icon }) => {
+          {[{ href: "/", label: "Inicio", icon: Home }, ...nav].map(({ href, label }) => {
             const active = isActive(href);
             return (
               <Link
@@ -345,11 +269,10 @@ export function SiteHeader({ storeName, logoUrl, user, showAccounts = true }: Pr
                   setSearchOpen(false);
                 }}
                 className={cn(
-                  "inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full px-3 text-[13px] font-medium ring-1 transition-colors",
-                  active ? "bg-nova-400/12 text-nova-300 ring-nova-400/35" : "text-fg-muted ring-white/[0.08] active:bg-white/[0.06]",
+                  "inline-flex h-8 shrink-0 items-center rounded-lg px-3 text-[13.5px] font-medium transition-colors",
+                  active ? "bg-white/[0.08] text-fg" : "text-fg-muted active:bg-white/[0.06]",
                 )}
               >
-                <Icon className="size-3.5" />
                 {label}
               </Link>
             );
@@ -382,7 +305,7 @@ export function SiteHeader({ storeName, logoUrl, user, showAccounts = true }: Pr
                     active ? "bg-white/[0.07] ring-white/12" : "ring-white/[0.05] hover:bg-white/[0.04]",
                   )}
                 >
-                  <span className={cn("grid size-9 place-items-center rounded-xl", active ? "bg-nova-400/15 text-nova-300" : "bg-white/[0.05] text-fg-muted")}>
+                  <span className={cn("grid size-9 place-items-center rounded-xl", active ? "bg-white/[0.08] text-fg" : "bg-white/[0.04] text-fg-muted")}>
                     <Icon className="size-[18px]" />
                   </span>
                   {label}
@@ -392,20 +315,20 @@ export function SiteHeader({ storeName, logoUrl, user, showAccounts = true }: Pr
             })}
             <div className="mt-4 grid grid-cols-2 gap-2">
               {user ? (
-                <Link href="/cuenta" className="flex h-12 items-center justify-center gap-2 rounded-full bg-white/[0.06] text-sm font-semibold ring-1 ring-white/10">
+                <Link href="/cuenta" className="flex h-12 items-center justify-center gap-2 rounded-xl bg-white/[0.06] text-sm font-semibold ring-1 ring-white/10">
                   <UserAvatar user={user} size={26} ring={false} /> Mi cuenta
                 </Link>
               ) : (
-                <Link href="/ingresar" className="flex h-12 items-center justify-center gap-2 rounded-full bg-nova-400 text-sm font-semibold text-nova-ink">
+                <Link href="/ingresar" className="flex h-12 items-center justify-center gap-2 rounded-xl bg-nova-600 text-sm font-semibold text-white">
                   <LogIn className="size-4" /> Ingresar
                 </Link>
               )}
               {user?.staff ? (
-                <Link href="/admin" className="flex h-12 items-center justify-center gap-2 rounded-full bg-white/[0.06] text-sm font-semibold ring-1 ring-white/10">
+                <Link href="/admin" className="flex h-12 items-center justify-center gap-2 rounded-xl bg-white/[0.06] text-sm font-semibold ring-1 ring-white/10">
                   <LayoutDashboard className="size-4" /> Panel
                 </Link>
               ) : (
-                <Link href="/carrito" className="flex h-12 items-center justify-center gap-2 rounded-full bg-white/[0.06] text-sm font-semibold ring-1 ring-white/10">
+                <Link href="/carrito" className="flex h-12 items-center justify-center gap-2 rounded-xl bg-white/[0.06] text-sm font-semibold ring-1 ring-white/10">
                   <ShoppingBag className="size-4" /> Carrito{count ? ` (${count})` : ""}
                 </Link>
               )}

@@ -1,6 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, ArrowUpRight, Headphones, KeyRound, Mail, MessageCircle, RotateCcw, ShieldCheck } from "lucide-react";
-import { Gem } from "@/components/brand/gem";
+import { Mail, MessageCircle } from "lucide-react";
 import { Logo } from "@/components/brand/logo";
 import { PaymentBadges } from "@/components/brand/payment-badges";
 import { Container } from "@/components/ui/primitives";
@@ -52,12 +51,6 @@ const COLUMNS = [
   },
 ];
 
-const GUARANTEES = [
-  { icon: ShieldCheck, label: "Pago verificado" },
-  { icon: RotateCcw, label: "Reembolso si falla" },
-  { icon: KeyRound, label: "Sin contraseñas" },
-  { icon: Headphones, label: "Soporte real" },
-];
 
 export function SiteFooter({ settings, payments, showAccounts = true }: { settings: StoreSettings; payments: PublicPaymentOption[]; showAccounts?: boolean }) {
   const columns = showAccounts ? COLUMNS : COLUMNS.map((c) => ({ ...c, links: c.links.filter((l) => l.href !== "/cuentas") }));
@@ -69,42 +62,14 @@ export function SiteFooter({ settings, payments, showAccounts = true }: { settin
   // Datos del vendedor visibles (Estatuto del Consumidor): razón social, NIT y dirección.
   const company = [settings.legalName, settings.taxId && `NIT ${settings.taxId}`, [settings.address, settings.city].filter(Boolean).join(", ")].filter(Boolean).join(" · ");
   const socials = [
-    wa && { href: wa, label: "WhatsApp", icon: <MessageCircle className="size-[18px]" />, tint: "hover:bg-green-500/15 hover:text-green-400" },
-    settings.instagram && { href: settings.instagram, label: "Instagram", icon: <InstagramGlyph className="size-[18px]" />, tint: "hover:bg-pink-500/15 hover:text-pink-300" },
-    settings.supportEmail && { href: `mailto:${settings.supportEmail}`, label: "Correo", icon: <Mail className="size-[18px]" />, tint: "hover:bg-sky-500/15 hover:text-sky-300" },
-  ].filter(Boolean) as Array<{ href: string; label: string; icon: React.ReactNode; tint: string }>;
+    wa && { href: wa, label: "WhatsApp", icon: <MessageCircle className="size-[18px]" /> },
+    settings.instagram && { href: settings.instagram, label: "Instagram", icon: <InstagramGlyph className="size-[18px]" /> },
+    settings.supportEmail && { href: `mailto:${settings.supportEmail}`, label: "Correo", icon: <Mail className="size-[18px]" /> },
+  ].filter(Boolean) as Array<{ href: string; label: string; icon: React.ReactNode }>;
 
   return (
-    <footer className="relative mt-10 overflow-hidden border-t sm:mt-16 border-white/[0.06] bg-ink-950">
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-nova-400/40 to-transparent" aria-hidden />
-      <div className="pointer-events-none absolute left-1/2 top-0 h-64 w-[900px] -translate-x-1/2 rounded-full bg-[radial-gradient(closest-side,rgba(108,180,255,0.10),transparent)]" aria-hidden />
-
+    <footer className="relative mt-16 border-t border-white/[0.08] bg-ink-950 sm:mt-24">
       <Container className="relative">
-        {/* Llamado a la acción */}
-        <div className="surface relative mt-8 overflow-hidden p-6 sm:mt-12 sm:p-9">
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(600px_260px_at_85%_50%,rgb(41_168_255/0.28),transparent_70%),radial-gradient(500px_240px_at_10%_120%,rgb(139_108_255/0.25),transparent_70%)]" aria-hidden />
-          <div className="bg-grid pointer-events-none absolute inset-0 opacity-50" aria-hidden />
-          <Gem className="pointer-events-none absolute -right-8 -top-6 w-28 rotate-[-12deg] opacity-80 animate-float drop-shadow-[0_0_40px_rgb(41_168_255/0.6)] sm:right-12 sm:top-1/2 sm:w-44 sm:-translate-y-1/2 sm:opacity-95" />
-          <div className="relative max-w-xl">
-            <p className="font-brand text-[11px] font-bold uppercase tracking-[0.3em] text-nova-300">Nova Diamonds</p>
-            <p className="mt-2 max-w-[75%] font-brand text-[24px] font-black uppercase leading-tight sm:max-w-none sm:text-[32px]">
-              ¿Listo para <span className="text-nebula">recargar?</span>
-            </p>
-            <p className="mt-2 text-[14.5px] text-fg-muted">Pon tu ID, elige tu paquete con bonus y paga en pesos.</p>
-            <div className="mt-6 grid gap-2.5 sm:flex sm:flex-wrap">
-              <Link href="/recargas" className="btn-nova btn-shine inline-flex h-12 items-center justify-center gap-2 px-6 font-brand text-[12px] font-bold uppercase tracking-[0.12em]">
-                Recargar diamantes <ArrowRight className="size-4" />
-              </Link>
-              <Link
-                href={showAccounts ? "/cuentas" : "/pedido"}
-                className="chamfer inline-flex h-12 items-center justify-center gap-2 bg-white/[0.06] px-6 font-brand text-[12px] font-bold uppercase tracking-[0.12em] text-fg transition hover:bg-white/[0.12]"
-              >
-                {showAccounts ? "Ver cuentas" : "Rastrear pedido"}
-              </Link>
-            </div>
-          </div>
-        </div>
-
         {/* Cuerpo */}
         <div className="grid gap-10 pb-8 pt-12 sm:gap-12 sm:pb-10 sm:pt-16 lg:grid-cols-[1.15fr_2fr]">
           <div className="max-w-sm">
@@ -121,7 +86,7 @@ export function SiteFooter({ settings, payments, showAccounts = true }: { settin
                     {...(s.href.startsWith("http") ? { target: "_blank", rel: "noopener noreferrer" } : {})}
                     aria-label={s.label}
                     title={s.label}
-                    className={`grid size-10 place-items-center rounded-full bg-white/[0.05] text-fg-muted ring-1 ring-white/[0.08] transition ${s.tint}`}
+                    className="grid size-10 place-items-center rounded-lg border border-white/[0.08] text-fg-muted transition-colors hover:bg-white/[0.06] hover:text-fg"
                   >
                     {s.icon}
                   </a>
@@ -130,7 +95,7 @@ export function SiteFooter({ settings, payments, showAccounts = true }: { settin
             )}
             {methods.length > 0 && (
               <div className="mt-6">
-                <p className="mb-2 text-[12px] font-semibold uppercase tracking-wider text-fg-subtle">Medios de pago</p>
+                <p className="mb-2 text-[13px] font-medium text-fg-subtle">Medios de pago</p>
                 <PaymentBadges methods={methods} size="sm" />
               </div>
             )}
@@ -139,13 +104,13 @@ export function SiteFooter({ settings, payments, showAccounts = true }: { settin
           <div className="grid grid-cols-2 gap-x-6 gap-y-8 sm:grid-cols-3 sm:gap-8">
             {columns.map((col) => (
               <nav key={col.title} aria-label={col.title}>
-                <p className="mb-3 font-brand text-[11.5px] font-bold uppercase tracking-[0.18em] text-nova-200 sm:mb-4">{col.title}</p>
+                <p className="mb-3 text-[14px] font-semibold text-fg sm:mb-4">{col.title}</p>
                 <ul className="space-y-2.5 sm:space-y-3">
                   {col.links.map((l) => (
                     <li key={l.href}>
                       <Link href={l.href} className="group inline-flex items-center gap-1 text-[14px] text-fg-muted transition-colors hover:text-fg">
                         {l.label}
-                        <ArrowUpRight className="size-3.5 opacity-0 transition-opacity group-hover:opacity-60" />
+                        
                       </Link>
                     </li>
                   ))}
@@ -155,17 +120,8 @@ export function SiteFooter({ settings, payments, showAccounts = true }: { settin
           </div>
         </div>
 
-        {/* Garantías */}
-        <ul className="surface-flat grid grid-cols-2 gap-px overflow-hidden sm:grid-cols-4">
-          {GUARANTEES.map(({ icon: Icon, label }) => (
-            <li key={label} className="flex items-center justify-center gap-2 px-2 py-3.5 text-[12.5px] font-semibold sm:gap-2.5 sm:px-3 sm:py-4 sm:text-[13px]">
-              <Icon className="size-4 text-nova-300" /> {label}
-            </li>
-          ))}
-        </ul>
-
         {/* Barra inferior */}
-        <div className="flex flex-col gap-3 py-8 text-[12.5px] text-fg-subtle sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 border-t border-white/[0.08] py-8 text-[12.5px] text-fg-subtle sm:flex-row sm:items-center sm:justify-between">
           <p>
             © {year} {settings.legalName || settings.storeName}
             {company && <span className="block sm:inline"><span className="hidden sm:inline"> · </span>{company}</span>}
