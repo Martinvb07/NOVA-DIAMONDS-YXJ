@@ -30,7 +30,7 @@ jobs:
     env:
       DATABASE_URL: mysql://root:ci@127.0.0.1:3306/nova_store
       AUTH_SECRET: ci-solo-para-compilar-0000000000000000000000
-      APP_URL: https://nova.llanostudio.co
+      APP_URL: https://novadiamonds.co
       NEXT_TELEMETRY_DISABLED: "1"
     steps:
       - name: Checkout
@@ -64,7 +64,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: produccion
-      url: https://nova.llanostudio.co
+      url: https://novadiamonds.co
     steps:
       - name: Preparar clave SSH
         env:

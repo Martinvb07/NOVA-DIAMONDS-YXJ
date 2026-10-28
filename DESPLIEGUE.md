@@ -29,7 +29,7 @@ El archivo **`deploy/.env.production`** ya está generado en tu PC y no se sube 
 - Llaves de RechargeGame y Resend.
 - Administrador inicial: **tu-correo@ejemplo.com**, con una contraseña temporal (`SEED_ADMIN_PASSWORD`). La dirección secreta del panel está en `ADMIN_PATH`.
 
-Ya está configurado para **nova.llanostudio.co** (`APP_URL=https://nova.llanostudio.co`, remitente `NOVA DIAMONDS <pedidos@nova.llanostudio.co>`). Solo queda, opcional, `TOPUP_WEBHOOK_SECRET` (paso 4).
+Ya está configurado para **novadiamonds.co** (`APP_URL=https://novadiamonds.co`, remitente `NOVA DIAMONDS <pedidos@novadiamonds.co>`). Solo queda, opcional, `TOPUP_WEBHOOK_SECRET` (paso 4).
 
 Revisa el archivo desde tu PC antes de subirlo; hoy da **«Sin bloqueantes»**:
 
@@ -70,12 +70,12 @@ docker compose --env-file .env.production exec app npm run config:importar -- /t
 docker compose --env-file .env.production exec app npm run config:importar -- /tmp/config --confirmar
 ```
 
-Apunta el dominio al servidor en **GoDaddy** → Mis productos → nova.llanostudio.co → **DNS**:
+Apunta el dominio al servidor en **GoDaddy** → Mis productos → novadiamonds.co → **DNS**:
 
 | Tipo | Nombre | Valor |
 |---|---|---|
 | A | `@` | IP de tu VPS (borra el registro A «Parked» si existe) |
-| CNAME | `www` | `nova.llanostudio.co` |
+| CNAME | `www` | `novadiamonds.co` |
 
 Caddy obtiene el certificado HTTPS solo en uno o dos minutos después de que el DNS apunte al servidor.
 
@@ -83,17 +83,17 @@ Caddy obtiene el certificado HTTPS solo en uno o dos minutos después de que el 
 
 ## 4. Servicios externos
 
-**Correos (Resend).** En resend.com → Domains → **Add domain** → `nova.llanostudio.co`. Resend te muestra 3 o 4 registros (DKIM, SPF del subdominio `send` y, recomendado, DMARC): créalos tal cual en GoDaddy → DNS (en «Nombre» pon solo la parte antes de `.nova.llanostudio.co`). Cuando diga *Verified*, prueba desde Panel → Correos → «Enviar prueba». Borra la llave vieja que usaste en tu PC.
+**Correos (Resend).** En resend.com → Domains → **Add domain** → `novadiamonds.co`. Resend te muestra 3 o 4 registros (DKIM, SPF del subdominio `send` y, recomendado, DMARC): créalos tal cual en GoDaddy → DNS (en «Nombre» pon solo la parte antes de `.novadiamonds.co`). Cuando diga *Verified*, prueba desde Panel → Correos → «Enviar prueba». Borra la llave vieja que usaste en tu PC.
 
 **Bold.** Panel de Bold → Integraciones:
 - Llaves de identidad y secreta en `.env.production`.
-- Webhook: `https://nova.llanostudio.co/api/webhooks/bold` (ventas aprobadas, rechazadas y anulaciones).
+- Webhook: `https://novadiamonds.co/api/webhooks/bold` (ventas aprobadas, rechazadas y anulaciones).
 - Primero con llaves de prueba y `BOLD_TEST_MODE=true`: el checkout muestra «Modo pruebas» y no cobra. Cuando todo funcione, cambia a las llaves reales y deja `BOLD_TEST_MODE` vacío.
 - Si el webhook se demora, la tienda consulta el estado del pago sola (al volver el cliente y cada pocos minutos).
 
 **RechargeGame.**
 - Recarga saldo: debe cubrir al menos tu paquete más caro activo, que hoy cuesta unos 149.59 USDT.
-- Webhook: Profile → Webhook → `https://nova.llanostudio.co/api/webhooks/topup`. Copia el secreto `whsec_…` en `TOPUP_WEBHOOK_SECRET`.
+- Webhook: Profile → Webhook → `https://novadiamonds.co/api/webhooks/topup`. Copia el secreto `whsec_…` en `TOPUP_WEBHOOK_SECRET`.
 
 ---
 
@@ -102,7 +102,7 @@ Caddy obtiene el certificado HTTPS solo en uno o dos minutos después de que el 
 En el servidor, `crontab -e` y pega estas 2 líneas (cambia `TU_CRON_SECRET` por el valor de `CRON_SECRET` de `deploy/.env.production` y la ruta por la real):
 
 ```cron
-*/2 * * * * curl -fsS -m 50 -H "Authorization: Bearer TU_CRON_SECRET" https://nova.llanostudio.co/api/cron/maintenance > /dev/null
+*/2 * * * * curl -fsS -m 50 -H "Authorization: Bearer TU_CRON_SECRET" https://novadiamonds.co/api/cron/maintenance > /dev/null
 30 3 * * * sh /ruta/a/la/tienda/deploy/respaldo.sh >> /var/log/respaldo-tienda.log 2>&1
 ```
 
@@ -119,14 +119,14 @@ gunzip -c db-AAAAMMDD-HHMM.sql.gz | docker compose --env-file .env.production ex
 
 ## 6. Monitoreo
 
-- **Caídas:** en uptimerobot.com (gratis) crea un monitor HTTPS a `https://nova.llanostudio.co/api/health`. Responde 200 si la tienda y la base funcionan, 503 si no.
+- **Caídas:** en uptimerobot.com (gratis) crea un monitor HTTPS a `https://novadiamonds.co/api/health`. Responde 200 si la tienda y la base funcionan, 503 si no.
 - **Errores:** si un cliente ve una página de error, te llega un correo «Error en la tienda», como máximo uno cada 30 minutos por tipo de error.
 
 ---
 
 ## 7. Panel y datos de la tienda
 
-1. Entra por `https://nova.llanostudio.co/<ADMIN_PATH>` con **tu-correo@ejemplo.com** y la contraseña temporal de `SEED_ADMIN_PASSWORD`.
+1. Entra por `https://novadiamonds.co/<ADMIN_PATH>` con **tu-correo@ejemplo.com** y la contraseña temporal de `SEED_ADMIN_PASSWORD`.
 2. Activa la verificación en dos pasos y guarda los códigos de respaldo.
 3. Cambia la contraseña en Panel → Mi seguridad y **borra `SEED_ADMIN_PASSWORD`** de `deploy/.env.production`.
 4. **Panel → Ajustes:**
@@ -148,7 +148,7 @@ Debe terminar en **«Sin bloqueantes»**.
 - [ ] Compra real pequeña de punta a punta: 100 diamantes a tu propio ID, con Bold en modo real.
 - [ ] Llega el correo de confirmación y el de entrega.
 - [ ] Respuesta a una solicitud de soporte de prueba desde Panel → Soporte.
-- [ ] Google Search Console: agrega el dominio y envía `https://nova.llanostudio.co/sitemap.xml`.
+- [ ] Google Search Console: agrega el dominio y envía `https://novadiamonds.co/sitemap.xml`.
 
 ## Legal y negocio (con tu contador o abogado)
 

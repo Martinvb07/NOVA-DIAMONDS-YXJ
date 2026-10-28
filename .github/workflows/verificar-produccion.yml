@@ -55,11 +55,11 @@ jobs:
           if [ -d "$d" ]; then echo "  último respaldo: $(ls -t "$d" 2>/dev/null | head -n1 | sed 's/[^0-9-]//g' || echo ninguno) · copias: $(ls "$d" | wc -l)"; else echo "  ✖ no existe la carpeta de respaldos"; fi
           if grep -qE '^CRON_SECRET=.{24,}' .env; then
             s=$(grep -E '^CRON_SECRET=' .env | tail -n1 | cut -d= -f2- | tr -d '"')
-            r=$(curl -s --max-time 60 -H "Authorization: Bearer $s" -H "Host: nova.llanostudio.co" -H "X-Forwarded-Proto: https" http://127.0.0.1:3040/api/cron/maintenance || true)
+            r=$(curl -s --max-time 60 -H "Authorization: Bearer $s" -H "Host: novadiamonds.co" -H "X-Forwarded-Proto: https" http://127.0.0.1:3040/api/cron/maintenance || true)
             echo "  prueba de mantenimiento: $(printf '%s' "$r" | head -c 200)"
           fi
           echo "== nginx (cabeceras hacia la tienda)"
-          f=$(grep -rlE "server_name[^;]*nova\.llanostudio\.co" /etc/nginx/sites-enabled/ /etc/nginx/conf.d/ 2>/dev/null | head -n1 || true)
+          f=$(grep -rlE "server_name[^;]*novadiamonds\.co" /etc/nginx/sites-enabled/ /etc/nginx/conf.d/ 2>/dev/null | head -n1 || true)
           if [ -n "$f" ]; then
             grep -hoE "proxy_set_header +(X-Forwarded-For|X-Real-IP|X-Forwarded-Proto|Host) +[^;]+" "$f" | sort -u | sed 's/^/  /'
             grep -qE "client_max_body_size" "$f" && echo "  $(grep -hoE 'client_max_body_size +[^;]+' "$f" | head -n1)" || echo "  ⚠ sin client_max_body_size (nginx limita subidas a 1 MB)"
@@ -77,7 +77,7 @@ jobs:
           ls -1a | grep -E '^\.env\.' | while read -r x; do stat -c '  ⚠ copia de .env: %a %n' "$x"; done
           stat -c '  %a %U %n' "${UPLOADS_DIR:-/var/lib/nova/uploads}" 2>/dev/null || true
           echo "== certificado HTTPS"
-          echo | openssl s_client -servername nova.llanostudio.co -connect 127.0.0.1:443 2>/dev/null | openssl x509 -noout -enddate 2>/dev/null | sed 's/^/  /' || echo "  (no se pudo leer)"
+          echo | openssl s_client -servername novadiamonds.co -connect 127.0.0.1:443 2>/dev/null | openssl x509 -noout -enddate 2>/dev/null | sed 's/^/  /' || echo "  (no se pudo leer)"
           echo "== errores recientes de la tienda"
           pm2 logs nova --err --nostream --lines 30 2>&1 | grep -v TAILING | tail -n 30
           ENDSSH
@@ -93,7 +93,7 @@ jobs:
           VPS_HOST: ${{ secrets.VPS_HOST }}
         run: |
           set -uo pipefail
-          B=https://nova.llanostudio.co
+          B=https://novadiamonds.co
           estado() { curl -s -o /dev/null -w '%{http_code}' --max-time 20 "$@"; }
           revisar() { # ruta código-esperado descripción
             c=$(estado "$B$1"); [ "$c" = "$2" ] && echo "  ✔ $1 → $c" || echo "  ✖ $1 → $c (esperado $2) ${3:-}"
@@ -109,7 +109,7 @@ jobs:
           c=$(estado -o /dev/null -w '%{redirect_url}' "$B/cuenta"); echo "  /cuenta sin sesión → $(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' "$B/cuenta")"
           echo "  /api/cron/maintenance sin llave → $(estado "$B/api/cron/maintenance")"
           echo "== redirecciones"
-          echo "  http://nova.llanostudio.co → $(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' http://nova.llanostudio.co/)"
+          echo "  http://novadiamonds.co → $(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' http://novadiamonds.co/)"
           echo "== cabeceras de seguridad (/)"
           h=$(curl -sI --max-time 20 "$B/")
           for k in strict-transport-security content-security-policy x-frame-options x-content-type-options referrer-policy permissions-policy cross-origin-opener-policy; do
@@ -120,8 +120,8 @@ jobs:
           echo "== cookies de sesión"
           curl -s -D - -o /dev/null "$B/ingresar" | grep -i '^set-cookie' | sed -E 's/=[^;]*/=<valor>/' | sed 's/^/  /'
           echo "== TLS"
-          echo | openssl s_client -servername nova.llanostudio.co -connect nova.llanostudio.co:443 2>/dev/null | openssl x509 -noout -enddate | sed 's/^/  /'
-          for v in tls1 tls1_1; do echo | openssl s_client -$v -servername nova.llanostudio.co -connect nova.llanostudio.co:443 >/dev/null 2>&1 && echo "  ⚠ acepta $v (viejo)" || echo "  ✔ rechaza $v"; done
+          echo | openssl s_client -servername novadiamonds.co -connect novadiamonds.co:443 2>/dev/null | openssl x509 -noout -enddate | sed 's/^/  /'
+          for v in tls1 tls1_1; do echo | openssl s_client -$v -servername novadiamonds.co -connect novadiamonds.co:443 >/dev/null 2>&1 && echo "  ⚠ acepta $v (viejo)" || echo "  ✔ rechaza $v"; done
           echo "== puertos internos desde fuera (deben estar cerrados)"
           for port in 3040 3306 3001 3000 6379 5432 8080; do
             timeout 6 bash -c "echo > /dev/tcp/$VPS_HOST/$port" 2>/dev/null && echo "  ⚠ $port ABIERTO" || echo "  ✔ $port cerrado"
