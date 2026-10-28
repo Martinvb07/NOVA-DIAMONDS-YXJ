@@ -10,7 +10,7 @@ const ICONS: Record<string, LucideIcon> = { nuevos: Sparkles, vendidos: Flame, o
 
 export type ProductTab = { id: string; label: string; items: ShopItem[] };
 
-/** Vitrina con pestañas a la izquierda (lista vertical en escritorio, fila deslizable en celular) y rejilla a la derecha. */
+/** Vitrina con pestañas en píldoras arriba (deslizables en celular) y rejilla de tarjetas debajo. */
 export function ProductTabs({ tabs }: { tabs: ProductTab[] }) {
   const list = tabs.filter((t) => t.items.length);
   const [active, setActive] = useState(list[0]?.id);
@@ -18,8 +18,8 @@ export function ProductTabs({ tabs }: { tabs: ProductTab[] }) {
   if (!current) return null;
 
   return (
-    <section aria-label="Vitrina de productos" className="grid gap-4 lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-6">
-      <div role="tablist" aria-orientation="vertical" className="-mx-4 flex gap-2 self-start overflow-x-auto px-4 [scrollbar-width:none] lg:mx-0 lg:flex-col lg:gap-0 lg:overflow-visible lg:overflow-hidden lg:rounded-[var(--radius-card)] lg:border lg:border-nova-400/20 lg:bg-ink-900/70 lg:px-0 lg:py-1 lg:backdrop-blur">
+    <div className="space-y-5">
+      <div role="tablist" className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:px-0">
         {list.map((t) => {
           const Icon = ICONS[t.id] ?? Gem;
           const on = t.id === current.id;
@@ -31,26 +31,25 @@ export function ProductTabs({ tabs }: { tabs: ProductTab[] }) {
               aria-selected={on}
               onClick={() => setActive(t.id)}
               className={cn(
-                "flex h-10 shrink-0 items-center gap-3 rounded-full px-4 text-[12px] font-bold uppercase tracking-wider ring-1 transition-colors lg:h-14 lg:rounded-none lg:px-5 lg:ring-0 lg:[&:not(:last-child)]:border-b lg:border-white/[0.06]",
-                on ? "bg-nova-400/12 text-nova-300 ring-nova-400/40 lg:bg-gradient-to-r lg:from-nova-400/[0.14] lg:to-transparent lg:shadow-[inset_3px_0_0_0_var(--color-nova-400)]" : "text-fg-subtle ring-white/[0.08] hover:text-fg",
+                "inline-flex h-10 shrink-0 items-center gap-2 rounded-full px-4 text-[13.5px] font-semibold transition-colors",
+                on ? "bg-nova-400 text-nova-ink shadow-[0_8px_24px_-10px_rgb(41_168_255/0.9)]" : "bg-white/[0.04] text-fg-muted ring-1 ring-white/[0.08] hover:bg-white/[0.08] hover:text-fg",
               )}
             >
-              <span className={cn("grid size-7 place-items-center rounded-full ring-1", on ? "text-nova-300 ring-nova-400/60 shadow-[0_0_12px_-2px_rgb(41_168_255/0.8)]" : "ring-white/15")}>
-                <Icon className="size-3.5" />
-              </span>
+              <Icon className="size-4" />
               {t.label}
+              <span className={cn("rounded-full px-1.5 text-[11px] tabular-nums", on ? "bg-nova-ink/15" : "bg-white/[0.06] text-fg-subtle")}>{Math.min(t.items.length, 8)}</span>
             </button>
           );
         })}
       </div>
 
-      <div role="tabpanel" aria-label={current.label} className="surface grid grid-cols-2 self-start overflow-hidden sm:grid-cols-3 xl:grid-cols-4">
+      <div role="tabpanel" aria-label={current.label} className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
         {current.items.slice(0, 8).map((it) => (
-          <div key={it.key} className="animate-fade-in shadow-[inset_-1px_-1px_0_0_rgb(255_255_255/0.07)]">
-            <ShopCell item={it} variant="card" />
+          <div key={it.key} className="animate-fade-in">
+            <ShopCell item={it} />
           </div>
         ))}
       </div>
-    </section>
+    </div>
   );
 }

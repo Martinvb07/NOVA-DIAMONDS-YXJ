@@ -36,8 +36,8 @@
   --color-warn-400: #f4b84a;
   --color-bad-400: #ff6b6b;
 
-  --radius-card: 8px;
-  --radius-ctl: 6px;
+  --radius-card: 18px;
+  --radius-ctl: 12px;
 
   --color-plasma-400: #8b6cff; /* violeta de nebulosa, acento secundario */
   --color-plasma-500: #6d4dff;
@@ -204,9 +204,9 @@
     border: 1px solid transparent;
     border-radius: var(--radius-card);
     background:
-      linear-gradient(180deg, rgb(20 28 50 / 0.82), rgb(10 14 28 / 0.88)) padding-box,
-      linear-gradient(150deg, rgb(94 231 255 / 0.38), rgb(255 255 255 / 0.05) 32%, rgb(255 255 255 / 0.04) 68%, rgb(139 108 255 / 0.34)) border-box;
-    box-shadow: 0 20px 50px -24px rgb(0 0 0 / 0.9), 0 0 40px -28px rgb(41 168 255 / 0.6);
+      linear-gradient(180deg, rgb(19 26 46 / 0.78), rgb(10 14 28 / 0.86)) padding-box,
+      linear-gradient(160deg, rgb(127 212 255 / 0.22), rgb(255 255 255 / 0.06) 30%, rgb(255 255 255 / 0.04) 70%, rgb(139 108 255 / 0.2)) border-box;
+    box-shadow: 0 24px 60px -30px rgb(0 0 0 / 0.95);
     backdrop-filter: blur(10px);
   }
   .surface-flat {
@@ -217,8 +217,9 @@
       linear-gradient(150deg, rgb(94 231 255 / 0.22), rgb(255 255 255 / 0.05) 40%, rgb(139 108 255 / 0.2)) border-box;
   }
   /* Esquinas cortadas en diagonal, estilo esports (botones, etiquetas y cajas destacadas). */
-  .chamfer { clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px); border-radius: 0; }
-  .chamfer-sm { clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px); border-radius: 0; }
+  /* Antes eran esquinas cortadas; ahora esquinas suaves y consistentes en toda la tienda. */
+  .chamfer { border-radius: 14px; }
+  .chamfer-sm { border-radius: 8px; }
   /* Texto con degradado de nebulosa */
   .text-nebula {
     background: linear-gradient(90deg, #7fe3ff, #29a8ff 45%, #8b6cff);
@@ -230,11 +231,22 @@
   .btn-nova {
     background: linear-gradient(100deg, #7fe3ff 0%, #29a8ff 55%, #4f7dff 100%);
     color: var(--color-nova-ink);
-    clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
-    border-radius: 0;
-    transition: filter 0.3s, transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    border-radius: 12px;
+    box-shadow: 0 1px 0 0 rgb(255 255 255 / 0.45) inset, 0 10px 28px -10px rgb(41 168 255 / 0.75);
+    transition: filter 0.3s, transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s;
   }
-  .btn-nova:hover { filter: brightness(1.1) saturate(1.1); transform: translateY(-1px); }
+  .btn-nova:hover { filter: brightness(1.08) saturate(1.1); transform: translateY(-1px); box-shadow: 0 1px 0 0 rgb(255 255 255 / 0.5) inset, 0 14px 34px -10px rgb(41 168 255 / 0.95); }
+  /* Tarjeta de producto: base sólida, borde fino que se ilumina al pasar el mouse. */
+  .card-product {
+    border-radius: var(--radius-card);
+    background: linear-gradient(180deg, rgb(22 30 52 / 0.9), rgb(12 16 30 / 0.92));
+    box-shadow: 0 0 0 1px rgb(255 255 255 / 0.07) inset, 0 18px 40px -24px rgb(0 0 0 / 0.9);
+    transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s, background 0.3s;
+  }
+  .card-product:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 0 0 1px rgb(41 168 255 / 0.55) inset, 0 26px 50px -22px rgb(0 0 0 / 0.95), 0 0 36px -14px rgb(41 168 255 / 0.6);
+  }
   /* Texto cromado como "NOVA DIAMONDS" del logo */
   .text-chrome {
     background: linear-gradient(180deg, #ffffff 0%, #dbe6f5 45%, #8ea3c4 55%, #e8f0fb 100%);

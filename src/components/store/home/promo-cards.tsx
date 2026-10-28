@@ -13,19 +13,19 @@ export function PromoCards({ cards }: { cards: PromoCard[] }) {
           key={c.title}
           href={c.href}
           className={cn(
-            "surface group relative flex min-h-[150px] items-center gap-3 overflow-hidden p-5 transition-[transform,box-shadow] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1",
-            c.highlight && "glow-nova",
+            "surface group relative flex min-h-[120px] items-center gap-4 overflow-hidden p-4 sm:min-h-[150px] sm:p-5 transition-[transform,box-shadow] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1",
+            c.highlight && "ring-1 ring-nova-400/40",
           )}
         >
           <div className="relative z-10 min-w-0 flex-1">
-            <p className="font-brand text-[14px] font-bold uppercase leading-tight tracking-[0.06em] text-fg">{c.kicker}</p>
-            <p className="text-nebula mt-0.5 text-[15px] font-semibold leading-tight">{c.title}</p>
-            <p className="mt-2 text-[11.5px] text-fg-subtle">{c.note}</p>
-            <span className="btn-nova chamfer-sm mt-3.5 inline-flex h-8 items-center px-4 text-[10.5px] font-extrabold uppercase tracking-wider">
-              {c.cta}
+            <p className="text-[11.5px] font-semibold uppercase tracking-[0.2em] text-nova-300">{c.kicker}</p>
+            <p className="mt-1 text-[19px] font-extrabold leading-tight text-fg">{c.title}</p>
+            <p className="mt-1.5 text-[13px] text-fg-muted">{c.note}</p>
+            <span className="mt-3 inline-flex items-center gap-1.5 text-[13px] font-semibold text-nova-300 transition-colors group-hover:text-nova-200">
+              {c.cta} <span aria-hidden className="transition-transform group-hover:translate-x-1">→</span>
             </span>
           </div>
-          <div className="relative w-[42%] max-w-[150px] shrink-0 transition-transform duration-500 group-hover:-translate-y-1 group-hover:scale-105">{c.art}</div>
+          <div className="relative w-[30%] max-w-[110px] shrink-0 sm:w-[38%] sm:max-w-[140px] transition-transform duration-500 group-hover:-translate-y-1 group-hover:scale-105">{c.art}</div>
         </Link>
       ))}
     </section>

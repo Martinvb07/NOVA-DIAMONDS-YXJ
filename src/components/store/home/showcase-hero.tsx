@@ -67,23 +67,23 @@ export function ShowcaseHero({ slides }: { slides: HeroSlide[] }) {
         {slides.map((s, idx) => {
           const off = idx !== i;
           return (
-            <div key={s.key} aria-hidden={off} className="grid w-full shrink-0 items-center gap-6 px-6 py-8 sm:grid-cols-[1.15fr_1fr] sm:px-14 sm:py-12 lg:min-h-[340px] lg:px-20">
+            <div key={s.key} aria-hidden={off} className="grid w-full shrink-0 items-center gap-6 px-6 pb-10 pt-8 sm:grid-cols-[1.15fr_1fr] sm:px-14 sm:py-12 lg:min-h-[340px] lg:px-20">
               <div className="order-2 sm:order-1">
                 <p className="inline-flex items-center gap-2 font-brand text-[12px] font-bold uppercase tracking-[0.3em] text-nova-300 sm:text-[13px]">
                   <span className="h-px w-8 bg-gradient-to-r from-transparent to-nova-300" aria-hidden />
                   {s.kicker}
                 </p>
                 <h2 className="text-chrome mt-3 text-[34px] font-black uppercase leading-[1] sm:text-[48px] lg:text-[56px]">{s.title}</h2>
-                <p className="mt-4 max-w-md text-[13.5px] leading-relaxed text-fg-muted">{s.text}</p>
+                <p className="mt-4 max-w-md text-[15px] leading-relaxed text-fg-muted">{s.text}</p>
                 <Link
                   href={s.href}
                   tabIndex={off ? -1 : 0}
-                  className="btn-nova btn-shine mt-7 inline-flex h-12 items-center px-8 font-brand text-[12.5px] font-bold uppercase tracking-[0.14em]"
+                  className="btn-nova btn-shine mt-7 inline-flex h-12 items-center px-8 text-[15px] font-bold"
                 >
                   {s.cta}
                 </Link>
               </div>
-              <div className="relative order-1 mx-auto w-full max-w-[230px] sm:order-2 sm:max-w-[300px]">
+              <div className="relative order-1 mx-auto w-full max-w-[170px] sm:order-2 sm:max-w-[300px]">
                 {/* Órbitas alrededor del paquete */}
                 <span aria-hidden className="pointer-events-none absolute -inset-[16%] rounded-full border border-nova-400/25 animate-orbit">
                   <span className="absolute left-1/2 top-0 size-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-cyan-glow shadow-[0_0_14px_3px_rgb(94_231_255/0.8)]" />
@@ -94,10 +94,10 @@ export function ShowcaseHero({ slides }: { slides: HeroSlide[] }) {
                 <div className="chamfer relative overflow-hidden shadow-[0_0_60px_-10px_rgb(41_168_255/0.6)] animate-float">
                   <DiamondCover tier={s.tier} diamonds={s.diamonds} bonus={s.bonus} />
                 </div>
-                <div className="absolute -bottom-3 -left-5 grid size-[92px] place-items-center rounded-full bg-ink-950/90 text-center ring-2 ring-plasma-400/70 backdrop-blur shadow-[0_0_30px_-6px_rgb(41_168_255/0.8)] sm:size-[104px]">
+                <div className="absolute -bottom-3 -left-5 grid size-[76px] place-items-center rounded-full bg-ink-950/90 text-center ring-2 ring-plasma-400/70 backdrop-blur shadow-[0_0_30px_-6px_rgb(41_168_255/0.8)] sm:size-[104px]">
                   <span className="leading-tight">
                     {s.original != null && s.original > s.price && <span className="block text-[11px] text-fg-subtle line-through">{formatMoney(s.original, s.currency)}</span>}
-                    <span className="block px-1 text-[15px] font-extrabold tabular-nums text-nova-300 sm:text-[17px]">{formatMoney(s.price, s.currency)}</span>
+                    <span className="block px-1 text-[13px] font-extrabold tabular-nums text-nova-300 sm:text-[17px]">{formatMoney(s.price, s.currency)}</span>
                   </span>
                 </div>
               </div>
