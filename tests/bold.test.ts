@@ -175,4 +175,12 @@ describe("Confirmación con la pasarela (firma sola no basta)", () => {
     expect(gatewayConfirms(claim, [gw({ currency: "USD" })])).toBe(false);
     expect(gatewayConfirms(claim, [gw({ reference: "VX-OTRA-ORDN" })])).toBe(false);
   });
+
+  it("modo pruebas: el webhook firmado basta solo para pedidos de prueba; en producción nunca", async () => {
+    const { sandboxAccepts } = await import("@/server/integrations/payments/confirm");
+    expect(sandboxAccepts("sandbox", true)).toBe(true);
+    expect(sandboxAccepts("sandbox", false)).toBe(false);
+    expect(sandboxAccepts("production", true)).toBe(false);
+    expect(sandboxAccepts("production", false)).toBe(false);
+  });
 });

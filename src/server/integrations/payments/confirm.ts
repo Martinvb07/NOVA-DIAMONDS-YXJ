@@ -8,3 +8,8 @@ import type { VerifiedPayment } from "./types";
 export function gatewayConfirms(claim: VerifiedPayment, fromGateway: VerifiedPayment[]): boolean {
   return fromGateway.some((v) => v.status === "APPROVED" && v.reference === claim.reference && v.amount === claim.amount && v.currency === claim.currency);
 }
+
+/** En modo pruebas la pasarela no confirma por API: basta el webhook firmado, y solo para pedidos de prueba. */
+export function sandboxAccepts(mode: "sandbox" | "production", orderIsTest: boolean): boolean {
+  return mode !== "production" && orderIsTest;
+}

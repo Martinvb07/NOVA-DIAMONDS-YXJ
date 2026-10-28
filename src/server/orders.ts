@@ -11,7 +11,7 @@ import { quotePrice } from "@/domain/pricing";
 import { costInCop, isFreeFireProductKey, parseRegionList, regionLabel } from "@/domain/topup-regions";
 import { getPaymentProvider } from "./integrations/payments";
 import type { VerifiedPayment } from "./integrations/payments/types";
-import { gatewayConfirms } from "./integrations/payments/confirm";
+import { gatewayConfirms, sandboxAccepts } from "./integrations/payments/confirm";
 import { activeTopUpProvider, getTopUpProvider } from "./integrations/topup";
 import type { TopUpProvider, TopUpRequest, TopUpResult } from "./integrations/topup/types";
 import { confirmRedemption, releaseRedemption, reservePromo, undoPromoReservation } from "./promo";
@@ -594,9 +594,16 @@ export async function confirmApprovedWebhook(providerId: string, p: VerifiedPaym
   if (p.status !== "APPROVED") return true;
   const provider = getPaymentProvider(providerId);
   if (!provider?.getCheckout) return true;
-  const order = await db.order.findUnique({ where: { number: p.reference }, select: { id: true } });
+  const order = await db.order.findUnique({ where: { number: p.reference }, select: { id: true, isTest: true } });
   if (!order) return false;
-  return gatewayConfirms(p, await checkoutsOf(order.id, provider));
+  if (gatewayConfirms(p, await checkoutsOf(order.id, provider))) return true;
+  // La transacción también se puede confirmar por su propio historial de notificaciones en la pasarela.
+  const tx = await provider.getPayment(p.providerRef).catch(() => null);
+  if (tx && gatewayConfirms(p, [tx])) return true;
+  // Modo pruebas (sandbox de Bold): el link se queda en PROCESSING y la transacción simulada no se puede
+  // consultar, así que el único aviso es el webhook firmado («Probar webhook»). Se acepta solo para pedidos
+  // de prueba creados en ese modo; en producción siempre se exige la confirmación de la pasarela.
+  return sandboxAccepts(provider.mode(), order.isTest);
 }
 
 const pendingChecks = new Map<string, number>();
