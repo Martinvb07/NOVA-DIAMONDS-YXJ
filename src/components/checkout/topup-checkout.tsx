@@ -2,8 +2,9 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { BadgeCheck, Check, CircleAlert, Info, Lock, MapPin, ShieldCheck } from "lucide-react";
+import { BadgeCheck, Check, CircleAlert, Clock, Info, Lock, MapPin, ShieldCheck } from "lucide-react";
 import { DiamondCover, tierFor } from "@/components/brand/covers";
+import { DELIVERY_TIME } from "@/domain/delivery-time";
 import { Button } from "@/components/ui/button";
 import { Alert, DemoBadge } from "@/components/ui/primitives";
 import { PRODUCT_LABELS } from "@/domain/labels";
@@ -25,6 +26,10 @@ type Props = {
   initialRegion: string;
   payments: PublicPaymentOption[];
   topupEnabled: boolean;
+  /** Aviso de mantenimiento: la tienda se ve, pero no vende. */
+  pausedNotice?: string | null;
+  /** Mostrar la casilla «Avísame de ofertas» (no a quien ya las aceptó en su cuenta). */
+  askMarketing?: boolean;
   initialSlug?: string;
   initialPlayerId?: string;
   defaultEmail?: string;
@@ -90,7 +95,7 @@ function PackageOption({ p, selected, onSelect }: { p: PackageView; selected: bo
   );
 }
 
-export function TopUpCheckout({ packages: allPackages, regions, initialRegion, payments, topupEnabled, initialSlug, initialPlayerId, defaultEmail, methods }: Props) {
+export function TopUpCheckout({ packages: allPackages, regions, initialRegion, payments, topupEnabled, pausedNotice, askMarketing = true, initialSlug, initialPlayerId, defaultEmail, methods }: Props) {
   const router = useRouter();
   const initial = allPackages.find((p) => p.slug === initialSlug && p.available) ?? null;
   const [region, setRegion] = useState(initial?.region ?? initialRegion);
@@ -106,6 +111,7 @@ export function TopUpCheckout({ packages: allPackages, regions, initialRegion, p
   const [provider, setProvider] = useState<string | null>(payments.length === 1 ? payments[0].id : null);
   const [email, setEmail] = useState(defaultEmail ?? "");
   const [accept, setAccept] = useState(false);
+  const [marketing, setMarketing] = useState(false);
   const [promo, setPromo] = useState<AppliedPromo>(null);
   const [error, setError] = useState<string | null>(null);
   const [checking, startCheck] = useTransition();
@@ -187,6 +193,7 @@ export function TopUpCheckout({ packages: allPackages, regions, initialRegion, p
         idempotencyKey,
         promoCode: promo?.code,
         acceptTerms: accept,
+        marketing,
       });
       if (!r.ok) return setError(r.error);
       if (r.redirectUrl.startsWith("/")) router.push(r.redirectUrl);
@@ -203,8 +210,8 @@ export function TopUpCheckout({ packages: allPackages, regions, initialRegion, p
     <div className="overflow-hidden rounded-[16px] bg-ink-850 ring-1 ring-white/[0.08]">
       {(closed || payClosed) && (
         <div className="p-4 sm:px-6">
-          <Alert tone={!topupEnabled ? "warning" : "info"} title={!topupEnabled ? "Recargas temporalmente no disponibles" : "Estamos activando los pagos"}>
-            {!topupEnabled ? "Puedes ver los precios, pero no es posible comprar en este momento." : "Muy pronto podrás comprar aquí. Mientras tanto puedes ver los paquetes y precios."}
+          <Alert tone={!topupEnabled ? "warning" : "info"} title={pausedNotice ? "Tienda en mantenimiento" : !topupEnabled ? "Recargas temporalmente no disponibles" : "Estamos activando los pagos"}>
+            {pausedNotice ?? (!topupEnabled ? "Puedes ver los precios, pero no es posible comprar en este momento." : "Muy pronto podrás comprar aquí. Mientras tanto puedes ver los paquetes y precios.")}
           </Alert>
         </div>
       )}
@@ -468,12 +475,23 @@ export function TopUpCheckout({ packages: allPackages, regions, initialRegion, p
                 y soy mayor de edad o compro con autorización de mi padre, madre o acudiente.
               </span>
             </label>
+            {askMarketing && (
+              <label className="mt-2.5 flex cursor-pointer items-start gap-2.5 text-[12.5px] text-fg-muted">
+                <input type="checkbox" className="mt-0.5 size-4 accent-[#29a8ff]" checked={marketing} onChange={(e) => setMarketing(e.target.checked)} />
+                <span>Avísame de ofertas y descuentos por correo (opcional; te das de baja con un clic).</span>
+              </label>
+            )}
 
             {error && (
               <Alert tone="danger" className="mt-3">
                 {error}
               </Alert>
             )}
+
+            <p className="mt-4 flex items-start gap-2 rounded-[10px] bg-white/[0.04] px-3 py-2.5 text-[12.5px] leading-relaxed text-fg-muted ring-1 ring-white/[0.06]">
+              <Clock className="mt-0.5 size-4 shrink-0 text-nova-300" />
+              <span>{DELIVERY_TIME.checkout}</span>
+            </p>
 
             <Button type="button" size="lg" className="mt-4 h-12 w-full text-[15px]" onClick={submit} disabled={!ready} loading={submitting}>
               <Lock className="size-4" />

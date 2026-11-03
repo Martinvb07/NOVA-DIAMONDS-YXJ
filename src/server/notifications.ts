@@ -12,6 +12,7 @@ import {
   staffChatEmail,
   staffClaimEmail,
   staffDeliveryIssueEmail,
+  staffPaymentIssueEmail,
   staffSecurityEmail,
   staffServerErrorEmail,
   staffTicketEmail,
@@ -84,7 +85,7 @@ async function smtp(): Promise<SmtpTransport> {
  * Envía un correo con el proveedor configurado y deja constancia (sin contenido) en EmailLog.
  * Sin proveedor configurado devuelve SKIPPED.
  */
-export async function sendEmail(to: string, template: string, email: Email, opts: { replyTo?: string } = {}): Promise<EmailResult> {
+export async function sendEmail(to: string, template: string, email: Email, opts: { replyTo?: string; headers?: Record<string, string> } = {}): Promise<EmailResult> {
   let result: EmailResult;
   const onlyTo = env.notify.onlyTo;
   if (!emailReady()) {
@@ -94,12 +95,12 @@ export async function sendEmail(to: string, template: string, email: Email, opts
   } else {
     try {
       if (env.notify.provider === "smtp") {
-        await (await smtp()).sendMail({ from: env.notify.fromEmail, to, subject: email.subject, html: email.html, text: email.text, ...(opts.replyTo ? { replyTo: opts.replyTo } : {}) });
+        await (await smtp()).sendMail({ from: env.notify.fromEmail, to, subject: email.subject, html: email.html, text: email.text, ...(opts.replyTo ? { replyTo: opts.replyTo } : {}), ...(opts.headers ? { headers: opts.headers } : {}) });
       } else {
         const res = await fetch("https://api.resend.com/emails", {
           method: "POST",
           headers: { Authorization: `Bearer ${env.notify.resendApiKey}`, "Content-Type": "application/json" },
-          body: JSON.stringify({ from: env.notify.fromEmail, to, subject: email.subject, html: email.html, text: email.text, ...(opts.replyTo ? { reply_to: opts.replyTo } : {}) }),
+          body: JSON.stringify({ from: env.notify.fromEmail, to, subject: email.subject, html: email.html, text: email.text, ...(opts.replyTo ? { reply_to: opts.replyTo } : {}), ...(opts.headers ? { headers: opts.headers } : {}) }),
           signal: AbortSignal.timeout(10_000),
         });
         if (!res.ok) throw new Error(`Resend HTTP ${res.status}: ${(await res.text().catch(() => "")).slice(0, 200)}`);
@@ -117,7 +118,7 @@ export async function sendEmail(to: string, template: string, email: Email, opts
 
 const orderLink = (o: { number: string; trackingToken: string }) => `${env.appUrl}/pedido/${o.number}?t=${o.trackingToken}`;
 
-export async function notifyOrder(orderId: string, template: NotificationTemplate) {
+export async function notifyOrder(orderId: string, template: NotificationTemplate, extra: { buyAgainUrl?: string } = {}) {
   const order = await db.order.findUnique({ where: { id: orderId } });
   if (!order) return;
 
@@ -137,6 +138,9 @@ export async function notifyOrder(orderId: string, template: NotificationTemplat
     playerId: order.playerId,
     link: orderLink(order),
     isTest: order.isTest,
+    expiresAt: new Intl.DateTimeFormat("es-CO", { hour: "numeric", minute: "2-digit", timeZone: "America/Bogota" }).format(order.expiresAt),
+    isPass: order.type === "TOPUP" && (order.itemSnapshot as { diamonds?: number }).diamonds === 0,
+    buyAgainUrl: extra.buyAgainUrl,
   });
   const r = await sendEmail(order.customerEmail, template, email);
   await db.notification.update({ where: { id: notification.id }, data: { status: r.status, sentAt: r.status === "SENT" ? new Date() : null, error: r.error ?? null } });
@@ -261,6 +265,24 @@ export async function notifyStaffDeliveryIssue(orderId: string, reason: string) 
     staffDeliveryIssueEmail(await getBrand(), { number: order.number, item: (order.itemSnapshot as { name?: string }).name ?? "Recarga", reason: reason.replace(/^\[[a-z0-9_]+\]\s*/i, "").slice(0, 500), adminLink: adminEntryUrl(`/admin/pedidos/${order.id}`) }),
   );
   await db.notification.updateMany({ where: { orderId, template: "staff_delivery_issue" }, data: { status: r.status, sentAt: r.status === "SENT" ? new Date() : null, error: r.error ?? null } });
+}
+
+/** Cobro aprobado de un pedido que ya no existe en la tienda (p. ej. borrado por estar cancelado): revisar y devolver. */
+export async function notifyStaffUnknownPayment(reference: string, amount: string, providerId: string) {
+  const to = await staffInbox();
+  if (!to) return;
+  const r = await sendEmail(
+    to,
+    "staff_payment_unknown",
+    staffPaymentIssueEmail(await getBrand(), {
+      number: reference.slice(0, 40),
+      item: `Cobro por ${amount}`,
+      title: "Pago de un pedido que no existe",
+      reason: `${providerId} confirmó un pago aprobado para la referencia ${reference.slice(0, 40)}, pero ese pedido ya no está en la tienda (se borró por estar cancelado o no existe). Revísalo en la pasarela y devuelve el dinero o crea la entrega a mano.`,
+      adminLink: adminEntryUrl("/admin/pedidos"),
+    }),
+  );
+  await db.notification.create({ data: { channel: "email", recipient: to, template: "staff_payment_unknown", status: r.status, sentAt: r.status === "SENT" ? new Date() : null, error: r.error ?? null } });
 }
 
 /** Aviso de seguridad al propio miembro del equipo (ingreso, 2FA, códigos). */

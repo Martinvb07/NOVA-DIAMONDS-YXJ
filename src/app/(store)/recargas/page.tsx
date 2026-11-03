@@ -16,6 +16,7 @@ import { activeTopUpProvider } from "@/server/integrations/topup";
 import { getSettings } from "@/server/settings";
 import { BannerSlot } from "@/components/store/banner-slot";
 import { parsePaymentMethods } from "@/domain/payment-methods";
+import { maintenanceNotice } from "@/domain/maintenance";
 
 export const dynamic = "force-dynamic";
 
@@ -33,10 +34,12 @@ export default async function RecargasPage({ searchParams }: { searchParams: Pro
   const packages = await getPackages({ regions: regions.length ? regions.map((r) => r.slug) : [mainRegion] });
   const initialRegion = regions.find((r) => r.slug === region)?.slug ?? (regions.some((r) => r.slug === mainRegion) ? mainRegion : (regions[0]?.slug ?? mainRegion));
   // Con sesión, se usa el ID de Free Fire guardado en el perfil si el enlace no trae uno.
-  const savedId = user && !id ? (await db.user.findUnique({ where: { id: user.id }, select: { ffPlayerId: true } }))?.ffPlayerId : null;
+  const profile = user ? await db.user.findUnique({ where: { id: user.id }, select: { ffPlayerId: true, marketingOptIn: true } }) : null;
+  const savedId = !id ? profile?.ffPlayerId : null;
   const methods = parsePaymentMethods(settings.paymentMethods);
   const payments = publicPaymentOptions();
   const topup = activeTopUpProvider();
+  const paused = maintenanceNotice(settings);
   // «Desde $X» y datos para buscadores: región principal (la de la mayoría de clientes).
   const prices = packages.filter((p) => p.available && p.region === mainRegion).map((p) => p.quote.price);
 
@@ -135,7 +138,7 @@ export default async function RecargasPage({ searchParams }: { searchParams: Pro
             {packages.length === 0 ? (
               <EmptyState title="No hay paquetes disponibles" description="El catálogo de recargas se está actualizando. Intenta más tarde." />
             ) : (
-              <TopUpCheckout packages={packages} regions={regions} initialRegion={initialRegion} payments={payments} topupEnabled={!!topup} initialSlug={paquete} initialPlayerId={(id ?? savedId ?? undefined)?.slice(0, 12)} defaultEmail={user?.email} methods={methods} />
+              <TopUpCheckout packages={packages} regions={regions} initialRegion={initialRegion} payments={payments} topupEnabled={!!topup && !paused} pausedNotice={paused} askMarketing={!profile?.marketingOptIn} initialSlug={paquete} initialPlayerId={(id ?? savedId ?? undefined)?.slice(0, 12)} defaultEmail={user?.email} methods={methods} />
             )}
           </div>
         </div>

@@ -9,6 +9,7 @@ import { accountOrderSchema, firstError, topUpOrderSchema } from "@/lib/validati
 import { canTransitionManually, ORDER_STATUS_META, type OrderStatusValue } from "@/domain/order-status";
 import { quotePrice } from "@/domain/pricing";
 import { costInCop, isFreeFireProductKey, parseRegionList, regionLabel } from "@/domain/topup-regions";
+import { maintenanceNotice } from "@/domain/maintenance";
 import { getPaymentProvider } from "./integrations/payments";
 import type { VerifiedPayment } from "./integrations/payments/types";
 import { gatewayConfirms, sandboxAccepts } from "./integrations/payments/confirm";
@@ -16,7 +17,9 @@ import { activeTopUpProvider, getTopUpProvider } from "./integrations/topup";
 import type { TopUpProvider, TopUpRequest, TopUpResult } from "./integrations/topup/types";
 import { confirmRedemption, releaseRedemption, reservePromo, undoPromoReservation } from "./promo";
 import { postSystemMessage } from "./chat";
-import { notifyOrder, notifyStaffAccountSold, notifyStaffDeliveryIssue } from "./notifications";
+import { notifyOrder, notifyStaffAccountSold, notifyStaffDeliveryIssue, notifyStaffUnknownPayment } from "./notifications";
+import { audit } from "@/lib/audit";
+import { recordCheckoutConsent } from "./marketing";
 import { getSettings } from "./settings";
 import { SupplierError } from "./integrations/topup/rechargegame";
 import { checkPlayerRegion, supplierRate, supplierRegionName } from "./supplier";
@@ -91,6 +94,9 @@ export async function createTopUpOrder(input: unknown, userId: string | null): P
 
   const topup = activeTopUpProvider();
   if (!topup) return { ok: false, error: "Las recargas automáticas no están habilitadas en este momento." };
+
+  const paused = maintenanceNotice(await getSettings());
+  if (paused) return { ok: false, error: paused };
 
   const payment = getPaymentProvider(data.paymentProvider);
   if (!payment?.isEnabled()) return { ok: false, error: "El medio de pago seleccionado no está disponible." };
@@ -175,6 +181,8 @@ export async function createTopUpOrder(input: unknown, userId: string | null): P
       },
     });
     void notifyOrder(order.id, "order_created").catch(() => {});
+    // «Avísame de ofertas» (opcional): el contacto queda guardado aunque este pedido se borre si no se paga.
+    if (data.marketing) void recordCheckoutConsent({ userId, email: data.email, playerId: data.playerId, source: "checkout-recarga" }).catch(() => {});
     return startCheckout(order);
   } catch (err) {
     if (promo) await undoPromoReservation(promo.promoCodeId);
@@ -193,6 +201,9 @@ export async function createAccountOrder(input: unknown, userId: string | null):
 
   const replay = await existingByIdempotency(data.idempotencyKey);
   if (replay) return replay;
+
+  const paused = maintenanceNotice(await getSettings());
+  if (paused) return { ok: false, error: paused };
 
   const payment = getPaymentProvider(data.paymentProvider);
   if (!payment?.isEnabled()) return { ok: false, error: "El medio de pago seleccionado no está disponible." };
@@ -285,6 +296,7 @@ export async function createAccountOrder(input: unknown, userId: string | null):
       },
     });
     void notifyOrder(order.id, "order_created").catch(() => {});
+    if (data.marketing) void recordCheckoutConsent({ userId, email: data.email, source: "checkout-cuenta" }).catch(() => {});
     return startCheckout(order);
   } catch (err) {
     await releaseReservation(orderId);
@@ -303,6 +315,8 @@ export async function resumeCheckout(orderId: string): Promise<CreateOrderResult
   const order = await db.order.findUnique({ where: { id: orderId } });
   if (!order || order.status !== "PENDING_PAYMENT") return { ok: false, error: "Este pedido ya no admite pagos." };
   if (order.expiresAt < new Date()) return { ok: false, error: "El tiempo para pagar este pedido terminó. Crea uno nuevo." };
+  const paused = maintenanceNotice(await getSettings());
+  if (paused) return { ok: false, error: paused };
   return startCheckout(order);
 }
 
@@ -482,7 +496,7 @@ export async function applyDeliveryResult(deliveryId: string, r: TopUpResult, ac
     await db.delivery.update({ where: { id: deliveryId }, data: { status: "FAILED", lastError: r.message ?? "Error desconocido", lockedAt: null } });
     await db.order.updateMany({ where: { id: order.id, status: { in: ["PAID", "PROCESSING"] } }, data: { status: "DELIVERY_FAILED" } });
     await addEvent(order.id, "DELIVERY_FAILED", r.message ?? "El proveedor no pudo completar la entrega.", actor, { data: { providerRef: r.providerRef } });
-    await addEvent(order.id, "DELIVERY_ISSUE", "Hubo un inconveniente con la entrega. Nuestro equipo lo revisará y te contactará.", "SYSTEM", { public: true });
+    await addEvent(order.id, "DELIVERY_ISSUE", "La entrega se está demorando. Nuestro equipo ya la está revisando; tu pago está seguro.", "SYSTEM", { public: true });
     void notifyOrder(order.id, "delivery_failed").catch(() => {});
     void notifyStaffDeliveryIssue(order.id, r.message ?? "El proveedor no pudo completar la entrega.").catch(() => {});
     return;
@@ -595,7 +609,12 @@ export async function confirmApprovedWebhook(providerId: string, p: VerifiedPaym
   const provider = getPaymentProvider(providerId);
   if (!provider?.getCheckout) return true;
   const order = await db.order.findUnique({ where: { number: p.reference }, select: { id: true, isTest: true } });
-  if (!order) return false;
+  if (!order) {
+    // No debería pasar (el enlace de pago vence con el pedido), pero si llega un cobro de un pedido que ya no existe
+    // (p. ej. se borró por estar cancelado), el equipo se entera para revisarlo en la pasarela y devolverlo.
+    await alertUnknownPayment(providerId, p).catch(() => {});
+    return false;
+  }
   if (gatewayConfirms(p, await checkoutsOf(order.id, provider))) return true;
   // La transacción también se puede confirmar por su propio historial de notificaciones en la pasarela.
   const tx = await provider.getPayment(p.providerRef).catch(() => null);
@@ -604,6 +623,14 @@ export async function confirmApprovedWebhook(providerId: string, p: VerifiedPaym
   // consultar, así que el único aviso es el webhook firmado («Probar webhook»). Se acepta solo para pedidos
   // de prueba creados en ese modo; en producción siempre se exige la confirmación de la pasarela.
   return sandboxAccepts(provider.mode(), order.isTest);
+}
+
+/** Aviso al equipo, una vez por referencia: cobro aprobado de un pedido que no existe en la tienda. */
+async function alertUnknownPayment(providerId: string, p: VerifiedPayment) {
+  const key = `${providerId}:${p.reference}`.slice(0, 190);
+  if (await db.auditLog.count({ where: { action: "payment.unknown_order", entityId: key } })) return;
+  await audit({ actorId: null, action: "payment.unknown_order", entity: "Payment", entityId: key, data: { amount: p.amount, currency: p.currency, providerRef: p.providerRef } });
+  await notifyStaffUnknownPayment(p.reference, `${formatNumber(p.amount)} ${p.currency}`, providerId);
 }
 
 const pendingChecks = new Map<string, number>();
@@ -718,6 +745,30 @@ async function releaseReservation(orderId: string) {
 // ---------------------------------------------------------------------
 // Mantenimiento (cron)
 // ---------------------------------------------------------------------
+
+/**
+ * Recordatorio de pago: un correo por pedido que llegó a la pasarela pero no se pagó, cuando pasó un tercio
+ * del tiempo para pagar (20 min en recargas) y todavía le quedan al menos 8 min. Una sola vez por pedido.
+ */
+export async function sendPaymentReminders(now = new Date()): Promise<number> {
+  // En mantenimiento no se pide pagar: no se podría entregar.
+  if (maintenanceNotice(await getSettings())) return 0;
+  const candidates = await db.order.findMany({
+    where: {
+      status: "PENDING_PAYMENT",
+      createdAt: { gte: new Date(now.getTime() - 3 * 3600_000), lte: new Date(now.getTime() - 7 * 60_000) },
+      expiresAt: { gt: new Date(now.getTime() + 8 * 60_000) },
+      events: { some: { type: "CHECKOUT_STARTED" } },
+      notifications: { none: { template: "payment_reminder" } },
+    },
+    select: { id: true, createdAt: true, expiresAt: true },
+    orderBy: { createdAt: "asc" },
+    take: 50,
+  });
+  const due = candidates.filter((o) => now.getTime() - o.createdAt.getTime() >= (o.expiresAt.getTime() - o.createdAt.getTime()) / 3);
+  for (const o of due) await notifyOrder(o.id, "payment_reminder").catch(() => {});
+  return due.length;
+}
 
 export async function expireStaleOrders() {
   const stale = await db.order.findMany({

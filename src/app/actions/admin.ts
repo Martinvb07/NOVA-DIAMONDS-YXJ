@@ -18,6 +18,7 @@ import { parsePaymentMethods } from "@/domain/payment-methods";
 import { toBannerSlot } from "@/domain/banner-slots";
 import { publishBlockers } from "@/domain/labels";
 import { markAccountDelivered, reconcilePayment, retryDelivery, transitionOrder } from "@/server/orders";
+import { sendOrderReminder, sendReminders, type ReminderKind } from "@/server/reminders";
 import { getSettings, MANAGED_SETTING_KEYS, saveSettings, SETTING_DEFAULTS, type SettingKey } from "@/server/settings";
 import { saveImage, UploadError } from "@/server/storage";
 import { runHealthCheck } from "@/server/integrations/status";
@@ -76,6 +77,9 @@ export async function orderAction(_: ActionResult, form: FormData): Promise<Acti
       result = await transitionOrder(orderId, to.data, actor, reason);
       break;
     }
+    case "remind":
+      result = await sendOrderReminder(orderId);
+      break;
     case "note": {
       const body = str(form, "body").slice(0, 2000);
       if (body.length < 2) return fail("La nota está vacía.");
@@ -619,7 +623,8 @@ export async function saveSettingsAction(_: ActionResult, form: FormData): Promi
   const values: Partial<Record<SettingKey, string>> = {};
   for (const key of Object.keys(SETTING_DEFAULTS) as SettingKey[]) {
     if (MANAGED_SETTING_KEYS.has(key)) continue; // se gestionan en Paquetes / Proveedor
-    if (key === "showGarenaDisclaimer") values[key] = bool(form, key) ? "true" : "false";
+    if (key === "showGarenaDisclaimer" || key === "maintenanceMode" || key === "autoRecovery" || key === "mktFirstPurchase" || key === "purgeCancelled") values[key] = bool(form, key) ? "true" : "false";
+    else if (key === "mktWinbackDays") values[key] = ["0", "14", "21", "30", "45", "60"].includes(str(form, key)) ? str(form, key) : "21";
     else if (key === "accountsMode") values[key] = ["auto", "on", "off"].includes(str(form, key)) ? str(form, key) : "auto";
     else if (key === "paymentMethods") values[key] = parsePaymentMethods(form.getAll("paymentMethods").map(String).join(",") || "none").join(",");
     else values[key] = str(form, key).slice(0, 400);
@@ -631,10 +636,31 @@ export async function saveSettingsAction(_: ActionResult, form: FormData): Promi
   if (values.supportEmail && !emailSchema.safeParse(values.supportEmail).success) return fail("Correo de soporte inválido.");
   if (values.staffAlertEmail && !emailSchema.safeParse(values.staffAlertEmail).success) return fail("Correo para avisos internos inválido.");
   if (values.logoUrl && !/^(https:\/\/|\/)/.test(values.logoUrl)) return fail("El logo debe ser una URL https o una ruta del sitio.");
+  if (values.marketingPromoCode) {
+    values.marketingPromoCode = normalizePromoCode(values.marketingPromoCode);
+    const promo = await db.promoCode.findUnique({ where: { code: values.marketingPromoCode }, select: { active: true, isDemo: true, scope: true } });
+    if (!promo || !promo.active || promo.isDemo) return fail("El código de descuento para los correos no existe o no está activo. Créalo primero en Descuentos.");
+    if (promo.scope === "ACCOUNT") return fail("El código de los correos debe servir para recargas (en Descuentos, alcance «Todo» o «Recargas»).");
+  }
   await saveSettings(values);
   await audit({ actorId: user.id, action: "settings.update", entity: "Setting", data: values });
   revalidatePath("/", "layout");
   return ok("Ajustes guardados.");
+}
+
+/** Recordatorios por correo en lote (Panel → Pedidos): de pago a los que esperan, o «comprar de nuevo» a los vencidos. */
+export async function sendRemindersAction(_: ActionResult, form: FormData): Promise<ActionResult> {
+  const user = await requireAdmin();
+  const kind = str(form, "kind") as ReminderKind;
+  if (kind !== "payment" && kind !== "recovery") return fail("Tipo de recordatorio inválido.");
+  const days = [7, 14, 30].includes(Number(str(form, "days"))) ? Number(str(form, "days")) : 14;
+  if (!rateLimit(`reminders:${user.id}`, 4, 10 * 60_000).ok) return fail("Espera unos minutos antes de enviar otro lote.");
+  const r = await sendReminders({ kinds: [kind], days, limit: 200 });
+  const sent = kind === "payment" ? r.payment.sent : r.recovery.sent;
+  await audit({ actorId: user.id, action: "orders.reminders", entity: "Order", data: { kind, days, sent } });
+  revalidatePath("/admin/pedidos");
+  if (!sent) return ok("No había a quién enviarle (o la tienda está en mantenimiento).");
+  return ok(`${sent} recordatorio(s) enviado(s).`);
 }
 
 export async function testIntegrationAction(_: ActionResult, form: FormData): Promise<ActionResult> {

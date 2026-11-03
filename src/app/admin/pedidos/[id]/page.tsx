@@ -15,6 +15,8 @@ import { OrderChat } from "@/components/orders/order-chat";
 import { chatState, listMessages, markRead } from "@/server/chat";
 import { getSettings } from "@/server/settings";
 import { refreshDeliveryIfStale } from "@/server/orders";
+import { reminderState } from "@/server/reminders";
+import { OrderReminder } from "@/components/admin/reminders";
 import { regionLabel } from "@/domain/topup-regions";
 import { Select } from "@/components/ui/select";
 
@@ -44,7 +46,7 @@ export default async function OrderDetail({ params }: { params: Promise<{ id: st
   const item = order.itemSnapshot as { name: string; diamonds?: number; bonusDiamonds?: number; sku?: string | null; region?: string; regionName?: string | null; costCents?: number | null };
   const transitions = MANUAL_TRANSITIONS[order.status] ?? [];
   const state = chatState(order);
-  const [settings, chatMessages] = await Promise.all([getSettings(), state === "hidden" ? [] : listMessages(order.id)]);
+  const [settings, chatMessages, reminder] = await Promise.all([getSettings(), state === "hidden" ? [] : listMessages(order.id), reminderState(order.id)]);
   if (state !== "hidden") await markRead(order.id, "staff");
   const chat = { state, messages: chatMessages };
   const wa = whatsappLink(order.customerPhone, `Hola ${order.customerName ?? ""}, te escribimos sobre tu pedido ${order.number}.`);
@@ -160,6 +162,8 @@ export default async function OrderDetail({ params }: { params: Promise<{ id: st
           )}
           <Panel title="Operaciones">
             <div className="space-y-5">
+              {reminder && <OrderReminder orderId={order.id} email={order.customerEmail} kind={reminder.kind} canSend={reminder.canSend} reason={reminder.reason} sentAt={reminder.sentAt ? formatDate(reminder.sentAt) : null} />}
+
               <div className="flex gap-2 rounded-lg border border-white/[0.06] bg-ink-900 p-3 text-[12px] text-fg-muted">
                 <Info className="mt-0.5 size-4 shrink-0 text-sky-400" />
                 Ningún botón puede marcar un pago como aprobado. El estado de pago solo cambia con un webhook firmado o consultando a la pasarela.

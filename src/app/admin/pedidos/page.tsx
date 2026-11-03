@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { Download } from "lucide-react";
 import { PageHeader, Table } from "@/components/admin/ui";
+import { ReminderPanel } from "@/components/admin/reminders";
+import { sendReminders } from "@/server/reminders";
 import { Button } from "@/components/ui/button";
 import { DemoBadge } from "@/components/ui/primitives";
 import { OrderStatusBadge } from "@/components/ui/status";
@@ -26,6 +28,9 @@ export default async function OrdersPage({ searchParams }: { searchParams: Promi
     db.order.count({ where }),
     db.order.aggregate({ where: { ...where, status: { in: [...REVENUE_STATUSES] } }, _sum: { total: true } }),
   ]);
+  // Recordatorios por correo (solo administradores): cuántos hay para enviar ahora (sin enviar nada).
+  const reminders = viewer.role === "ADMIN" ? await sendReminders({ kinds: ["payment", "recovery"], days: 30, dryRun: true }).catch(() => null) : null;
+  const inWindow = (d: number) => reminders?.recovery.ages.filter((a) => a < d).length ?? 0;
   const exportQs = new URLSearchParams(Object.entries(sp).filter(([k, v]) => k !== "p" && v) as [string, string][]).toString();
   const pages = Math.max(1, Math.ceil(total / PAGE));
   const qs = (p: number) => new URLSearchParams({ ...(sp as Record<string, string>), p: String(p) }).toString();
@@ -46,6 +51,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: Promi
           )
         }
       />
+      {reminders && <ReminderPanel pending={reminders.payment.candidates} recovery={{ 7: inWindow(7), 14: inWindow(14), 30: inWindow(30) }} />}
       <form method="get" className="mb-4 flex flex-wrap items-center gap-2">
         <input name="q" defaultValue={q} placeholder="Número, correo o ID de jugador" className="field sm:w-auto sm:min-w-[220px] sm:flex-1" aria-label="Buscar pedidos" />
         <Select name="estado" defaultValue={sp.estado ?? ""} className="field sm:w-[180px]" aria-label="Estado">

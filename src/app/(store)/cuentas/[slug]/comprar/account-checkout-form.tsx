@@ -39,6 +39,7 @@ export function AccountCheckoutForm({
   const [phone, setPhone] = useState(defaultPhone ?? "");
   const [provider, setProvider] = useState(payments.length === 1 ? payments[0].id : "");
   const [accept, setAccept] = useState(false);
+  const [marketing, setMarketing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
   const [promo, setPromo] = useState<AppliedPromo>(null);
@@ -58,7 +59,7 @@ export function AccountCheckoutForm({
         e.preventDefault();
         setError(null);
         start(async () => {
-          const r = await createAccountOrderAction({ accountId, name, email, phone, paymentProvider: provider, idempotencyKey, promoCode: promo?.code, acceptTerms: accept });
+          const r = await createAccountOrderAction({ accountId, name, email, phone, paymentProvider: provider, idempotencyKey, promoCode: promo?.code, acceptTerms: accept, marketing });
           if (!r.ok) return setError(r.error);
           if (r.redirectUrl.startsWith("/")) router.push(r.redirectUrl);
           else window.location.assign(r.redirectUrl);
@@ -140,6 +141,10 @@ export function AccountCheckoutForm({
           </a>{" "}
           y soy mayor de edad o compro con autorización de mi padre, madre o acudiente.
         </span>
+      </label>
+      <label className="flex cursor-pointer items-start gap-3 text-sm text-fg-muted">
+        <input type="checkbox" className="mt-0.5 size-4 accent-[#29a8ff]" checked={marketing} onChange={(e) => setMarketing(e.target.checked)} />
+        <span>Avísame de ofertas y descuentos por correo (opcional; te das de baja con un clic).</span>
       </label>
 
       {error && <Alert tone="danger">{error}</Alert>}

@@ -1,4 +1,5 @@
 import "server-only";
+import { DELIVERY_TIME } from "@/domain/delivery-time";
 
 /**
  * Plantillas de correo transaccional: HTML con estilos en línea y tablas (compatible con
@@ -53,6 +54,7 @@ type Block = {
   code?: string;
   quote?: string;
   internal?: boolean; // aviso al equipo: pie distinto, sin ayuda al cliente
+  unsubscribeUrl?: string; // correo de ofertas: pie con «Darte de baja» (Ley 1581)
 };
 
 function stepsHtml(s: Steps): string {
@@ -107,7 +109,11 @@ function layout(b: Brand, k: Block): string {
     ? `Aviso interno de ${esc(b.storeName)} para el equipo. No lo reenvíes a clientes.`
     : `<a href="${esc(b.appUrl)}/recargas" style="color:${C.muted};text-decoration:none">Recargar diamantes</a> &nbsp;·&nbsp; <a href="${esc(b.appUrl)}/pedido" style="color:${C.muted};text-decoration:none">Seguimiento</a> &nbsp;·&nbsp; <a href="${esc(b.appUrl)}/ayuda" style="color:${C.muted};text-decoration:none">Ayuda</a><br><br>
 🔒 Nunca te pediremos contraseñas, códigos de tu banco ni pagos fuera de <a href="${esc(b.appUrl)}" style="color:${C.muted}">${host}</a>.<br>
-${esc(b.storeName)} es una tienda independiente. Free Fire es una marca de Garena; no estamos afiliados.<br>Recibes este correo por tu actividad en ${esc(b.storeName)}.`;
+${esc(b.storeName)} es una tienda independiente. Free Fire es una marca de Garena; no estamos afiliados.<br>${
+        k.unsubscribeUrl
+          ? `Recibes este correo porque aceptaste recibir ofertas de ${esc(b.storeName)}. <a href="${esc(k.unsubscribeUrl)}" style="color:${C.muted}">Darte de baja</a>`
+          : `Recibes este correo por tu actividad en ${esc(b.storeName)}.`
+      }`;
 
   return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light only"><meta name="supported-color-schemes" content="light"><title>${esc(k.title)}</title></head>
 <body style="margin:0;padding:0;background:${C.page};-webkit-text-size-adjust:100%">
@@ -150,6 +156,7 @@ function plain(b: Brand, k: Block): string {
     k.note ? `\n${k.note}` : "",
     "",
     k.internal ? `— Aviso interno de ${b.storeName}` : `¿Ayuda? ${b.appUrl}/ayuda${b.supportEmail ? ` · ${b.supportEmail}` : ""}\n— ${b.storeName}`,
+    k.unsubscribeUrl ? `\nRecibes este correo porque aceptaste recibir ofertas. Darte de baja: ${k.unsubscribeUrl}` : "",
   ]
     .filter((x) => x !== "")
     .join("\n");
@@ -203,6 +210,57 @@ export function welcomeEmail(b: Brand, p: { name?: string | null }): Email {
   });
 }
 
+// ---------------------------------------------------------------------
+// Ofertas (solo a quien aceptó recibirlas; siempre con «Darte de baja»)
+// ---------------------------------------------------------------------
+
+export type MarketingKind = "first_purchase" | "winback";
+export type MarketingEmailData = {
+  name?: string | null;
+  playerId?: string | null;
+  /** Enlace a recargas (con el ID guardado y marcas de campaña). */
+  url: string;
+  /** Código de descuento opcional, ya descrito: «10 % de descuento», «$2.000 de descuento». */
+  promo?: { code: string; text: string; until?: string } | null;
+  unsubscribeUrl: string;
+};
+
+export function marketingEmail(b: Brand, kind: MarketingKind, p: MarketingEmailData): Email {
+  const first = p.name ? p.name.split(" ")[0] : "";
+  const promoNote = p.promo ? `Usa el código ${p.promo.code} al pagar: ${p.promo.text}${p.promo.until ? ` hasta el ${p.promo.until}` : ""}.` : undefined;
+  if (kind === "first_purchase") {
+    return build(b, p.promo ? `Tu primera recarga con ${p.promo.text} · ${b.storeName}` : `Tu primera recarga te espera · ${b.storeName}`, {
+      badge: p.promo ? "Regalo de bienvenida" : "Primera recarga",
+      tone: "brand",
+      title: `${first ? `${first}, tu` : "Tu"} primera recarga te espera`,
+      intro: "Recarga diamantes de Free Fire en un minuto: escribe tu ID, verificamos la cuenta antes de que pagues y la entrega es automática. Pagas en pesos con Nequi, PSE o tarjeta.",
+      preheader: p.promo ? `Código ${p.promo.code}: ${p.promo.text}` : "Diamantes directo a tu ID en un minuto",
+      code: p.promo?.code,
+      rows: [
+        ["Entrega", "Automática, directo a tu ID"],
+        ["Sin contraseñas", "Solo necesitamos tu ID de jugador"],
+        ["Pagos", "Nequi, PSE o tarjeta, en pesos"],
+      ],
+      cta: { label: "Recargar ahora", url: p.url },
+      note: promoNote,
+      unsubscribeUrl: p.unsubscribeUrl,
+    });
+  }
+  return build(b, p.promo ? `${first ? `${first}, ` : ""}vuelve con ${p.promo.text} · ${b.storeName}` : `¿Te quedaste sin diamantes? · ${b.storeName}`, {
+    badge: p.promo ? "Tienes un descuento" : "Te extrañamos",
+    tone: "brand",
+    title: "¿Te quedaste sin diamantes?",
+    intro: p.playerId
+      ? `Tu ID ${p.playerId} sigue guardado: recargas en un clic y la entrega es automática.`
+      : "Recarga en un minuto con tu ID: verificamos la cuenta antes de que pagues y la entrega es automática.",
+    preheader: p.promo ? `Código ${p.promo.code}: ${p.promo.text}` : "Recarga en un clic con tu ID guardado",
+    code: p.promo?.code,
+    cta: { label: p.playerId ? "Recargar a mi ID" : "Recargar ahora", url: p.url },
+    note: promoNote,
+    unsubscribeUrl: p.unsubscribeUrl,
+  });
+}
+
 export function passwordChangedEmail(b: Brand, p: { when: string; how: "reset" | "perfil" }): Email {
   return build(b, `Tu contraseña fue cambiada · ${b.storeName}`, {
     badge: "Aviso de seguridad",
@@ -220,8 +278,9 @@ export function passwordChangedEmail(b: Brand, p: { when: string; how: "reset" |
 // Pedidos
 // ---------------------------------------------------------------------
 
-export type OrderTemplate = "order_created" | "payment_confirmed" | "delivered" | "delivery_failed" | "refunded" | "cancelled";
-export type OrderEmailData = { number: string; type: "TOPUP" | "ACCOUNT"; item: string; total: string; playerId?: string | null; link: string; isTest: boolean };
+export type OrderTemplate = "order_created" | "payment_reminder" | "payment_confirmed" | "delivered" | "delivery_failed" | "refunded" | "cancelled" | "order_recovery";
+/** expiresAt: hora límite para pagar, ya en texto (ej. «3:45 p. m.»). buyAgainUrl: «comprar de nuevo» (pedido vencido). */
+export type OrderEmailData = { number: string; type: "TOPUP" | "ACCOUNT"; item: string; total: string; playerId?: string | null; link: string; isTest: boolean; expiresAt?: string; /** Tarjeta o pase (no diamantes). */ isPass?: boolean; buyAgainUrl?: string };
 
 export function orderEmail(b: Brand, t: OrderTemplate, o: OrderEmailData): Email {
   const account = o.type === "ACCOUNT";
@@ -237,11 +296,24 @@ export function orderEmail(b: Brand, t: OrderTemplate, o: OrderEmailData): Email
       subject: `Recibimos tu pedido ${o.number}`,
       block: { badge: "Pedido recibido", tone: "info", steps: steps(1), title: "Recibimos tu pedido", intro: "Tu pedido quedó registrado. Apenas la pasarela confirme el pago empezamos la entrega.", preheader: `Pedido ${o.number} · ${o.total}`, cta: view, note: test },
     },
+    payment_reminder: {
+      subject: `Tu pedido te espera · ${o.number}`,
+      block: {
+        badge: "Pago pendiente",
+        tone: "warning",
+        steps: steps(1),
+        title: "Tu pedido te espera",
+        intro: `${account ? "La cuenta sigue reservada para ti, pero aún no recibimos el pago." : "Aún no recibimos el pago de tu recarga."}${o.expiresAt ? ` Puedes completarlo hasta las ${o.expiresAt}; después el pedido se cancela solo.` : ""}`,
+        preheader: `Completa el pago de ${o.item}`,
+        cta: { label: "Completar pago", url: o.link },
+        note: test ?? "Si ya pagaste, ignora este correo: la confirmación de la pasarela puede tardar unos minutos.",
+      },
+    },
     payment_confirmed: {
       subject: `Pago confirmado · ${o.number}`,
       block: account
         ? { badge: "Pago confirmado", tone: "success", steps: steps(2), title: "¡Pago confirmado! La cuenta ya es tuya", intro: "Te entregamos los datos de acceso por el chat de tu pedido. Te avisamos por correo cuando te escribamos.", preheader: "Abre el chat de entrega de tu cuenta", cta: chat, note: test }
-        : { badge: "Pago confirmado", tone: "success", steps: steps(2), title: "¡Pago confirmado!", intro: "Estamos enviando los diamantes a tu ID. Normalmente tarda pocos minutos.", preheader: "Estamos enviando tus diamantes", cta: view, note: test },
+        : { badge: "Pago confirmado", tone: "success", steps: steps(2), title: "¡Pago confirmado!", intro: `${o.isPass ? `Estamos activando tu ${o.item} en tu ID.` : "Estamos enviando los diamantes a tu ID."} ${DELIVERY_TIME.processing}`, preheader: o.isPass ? "Estamos activando tu compra" : "Estamos enviando tus diamantes", cta: view, note: test },
     },
     delivered: {
       subject: account ? `Entrega completada · ${o.number}` : `¡Tus diamantes llegaron! · ${o.number}`,
@@ -250,12 +322,29 @@ export function orderEmail(b: Brand, t: OrderTemplate, o: OrderEmailData): Email
         : { badge: "Entregado", tone: "success", steps: steps(3), title: "¡Tus diamantes llegaron!", intro: "Abre Free Fire y revisa tu saldo. Gracias por comprar con nosotros.", preheader: "Recarga entregada", cta: { label: "Volver a recargar", url: `${b.appUrl}/recargas` }, secondary: { label: "Ver el detalle del pedido", url: o.link }, note: test },
     },
     delivery_failed: {
-      subject: `Estamos revisando tu entrega · ${o.number}`,
-      block: { badge: "En revisión", tone: "warning", steps: steps(2, true), title: "Estamos revisando tu entrega", intro: "Hubo un inconveniente con la entrega. Tu pago está seguro: lo resolvemos o te devolvemos el dinero.", preheader: "Tu pago está seguro", cta: view, note: test },
+      subject: account ? `Estamos revisando tu entrega · ${o.number}` : `Tu recarga se está demorando · ${o.number}`,
+      block: account
+        ? { badge: "En revisión", tone: "warning", steps: steps(2, true), title: "Estamos revisando tu entrega", intro: "Hubo un inconveniente con la entrega. Tu pago está seguro: lo resolvemos o te devolvemos el dinero.", preheader: "Tu pago está seguro", cta: view, note: test }
+        : { badge: "Demorada", tone: "warning", steps: steps(2, true), title: "Tu recarga se está demorando", intro: DELIVERY_TIME.delayed, preheader: "Tu pago está seguro", cta: view, note: test },
     },
     refunded: {
       subject: `Reembolso procesado · ${o.number}`,
       block: { badge: "Reembolsado", tone: "neutral", title: "Reembolso procesado", intro: "Devolvimos el dinero por el mismo medio de pago. Según tu banco puede tardar algunos días en verse.", preheader: "Te devolvimos el dinero", cta: view, note: test },
+    },
+    // Pedido que venció sin pagar: un solo recordatorio, con el ID ya escrito para comprar de nuevo.
+    order_recovery: {
+      subject: account ? `La cuenta que elegiste sigue disponible · ${o.number}` : `¿Aún quieres ${o.isPass ? "tu compra" : "tus diamantes"}? · ${o.number}`,
+      block: {
+        badge: "Pedido sin pagar",
+        tone: "info",
+        title: account ? "La cuenta que elegiste sigue disponible" : o.isPass ? `Tu ${o.item} te espera` : "Tus diamantes te esperan",
+        intro: account
+          ? "Tu pedido se canceló porque no se completó el pago, así que no se te cobró nada. La cuenta volvió a estar a la venta: si todavía la quieres, cómprala antes de que alguien más lo haga."
+          : `Tu pedido se canceló porque no se completó el pago, así que no se te cobró nada. Si todavía lo quieres, te dejamos ${o.playerId ? "tu ID listo" : "todo listo"}: es un minuto y pagas con Nequi, PSE o tarjeta.`,
+        preheader: account ? "Todavía puedes comprarla" : "Termina tu recarga en un minuto",
+        cta: { label: account ? "Ver la cuenta" : "Comprar de nuevo", url: o.buyAgainUrl ?? `${b.appUrl}/recargas` },
+        note: test ?? "No te enviaremos más recordatorios sobre este pedido. Antes de pagar ves el precio actual.",
+      },
     },
     cancelled: {
       subject: `Pedido cancelado · ${o.number}`,
@@ -263,7 +352,8 @@ export function orderEmail(b: Brand, t: OrderTemplate, o: OrderEmailData): Email
     },
   };
   const m = map[t];
-  return build(b, m.subject, { ...m.block, tag: o.number, rows });
+  // En el recordatorio de un pedido vencido no se repite el total viejo: el precio puede haber cambiado.
+  return build(b, m.subject, { ...m.block, tag: o.number, rows: t === "order_recovery" ? rows.filter(([k]) => k !== "Total") : rows });
 }
 
 export function chatMessageEmail(b: Brand, p: { number: string; link: string }): Email {
@@ -382,6 +472,22 @@ export function staffChatEmail(b: Brand, p: { number: string; adminLink: string 
     intro: `Hay un mensaje nuevo en el chat de entrega del pedido ${p.number}. Por seguridad, el contenido solo se ve en el panel.`,
     preheader: `Chat del pedido ${p.number}`,
     cta: { label: "Responder en el panel", url: p.adminLink },
+  });
+}
+
+export function staffPaymentIssueEmail(b: Brand, p: { number: string; item: string; title: string; reason: string; adminLink: string }): Email {
+  return build(b, `${p.title} · ${p.number}`, {
+    internal: true,
+    badge: "Revisar pago",
+    tone: "danger",
+    tag: p.number,
+    title: p.title,
+    intro: "Bold informó algo inusual sobre el pago de este pedido.",
+    preheader: p.reason.slice(0, 90),
+    rows: [["Pedido", p.number], ["Producto", p.item]],
+    quote: p.reason,
+    cta: { label: "Abrir el pedido", url: p.adminLink },
+    note: "La tienda no movió dinero por su cuenta: revisa el cobro en Bold y decide (reembolso, contracargo o nada).",
   });
 }
 

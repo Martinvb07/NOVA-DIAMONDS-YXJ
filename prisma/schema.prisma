@@ -21,34 +21,55 @@ enum Role {
 }
 
 model User {
-  id                String          @id @default(cuid())
-  email             String          @unique
-  name              String?
-  passwordHash      String
-  role              Role            @default(CUSTOMER)
-  disabled          Boolean         @default(false)
-  emailVerifiedAt   DateTime?
-  hasPassword       Boolean         @default(true) // false si entró solo con Google o con código
-  avatarUrl         String?         @db.VarChar(512) // foto subida por el cliente
-  avatarPreset      String?         @db.VarChar(40) // avatar elegido de la galería
-  phone             String?         @db.VarChar(30)
-  ffPlayerId        String?         @db.VarChar(12) // ID de Free Fire guardado para recargar rápido
-  profileTheme      String?         @db.VarChar(20) // portada elegida en Mi cuenta
+  id                 String          @id @default(cuid())
+  email              String          @unique
+  name               String?
+  passwordHash       String
+  role               Role            @default(CUSTOMER)
+  disabled           Boolean         @default(false)
+  emailVerifiedAt    DateTime?
+  hasPassword        Boolean         @default(true) // false si entró solo con Google o con código
+  avatarUrl          String?         @db.VarChar(512) // foto subida por el cliente
+  avatarPreset       String?         @db.VarChar(40) // avatar elegido de la galería
+  phone              String?         @db.VarChar(30)
+  ffPlayerId         String?         @db.VarChar(12) // ID de Free Fire guardado para recargar rápido
+  profileTheme       String?         @db.VarChar(20) // portada elegida en Mi cuenta
+  // Correos de ofertas (Ley 1581: autorización previa y expresa). Sin consentimiento no se envían.
+  marketingOptIn     Boolean         @default(false)
+  marketingConsentAt DateTime? // cuándo aceptó
+  marketingOptOutAt  DateTime? // cuándo dijo que no o se dio de baja (no se le vuelve a preguntar)
   // 2FA del equipo (TOTP). Los secretos se guardan cifrados; los códigos de recuperación, como HMAC.
-  totpSecret        String?         @db.Text
-  totpPendingSecret String?         @db.Text
-  totpEnabledAt     DateTime?
-  totpLastStep      Int?
-  recoveryCodes     Json?
-  googleSub         String?         @unique // cuenta de Google vinculada
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @updatedAt
-  sessions          Session[]
-  orders            Order[]
-  auditLogs         AuditLog[]
-  notes             AdminNote[]
-  passwordResets    PasswordReset[]
-  tickets           SupportTicket[]
+  totpSecret         String?         @db.Text
+  totpPendingSecret  String?         @db.Text
+  totpEnabledAt      DateTime?
+  totpLastStep       Int?
+  recoveryCodes      Json?
+  googleSub          String?         @unique // cuenta de Google vinculada
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+  sessions           Session[]
+  orders             Order[]
+  auditLogs          AuditLog[]
+  notes              AdminNote[]
+  passwordResets     PasswordReset[]
+  tickets            SupportTicket[]
+}
+
+/// Comprador sin cuenta que aceptó ofertas por correo al pagar (Ley 1581: autorización previa y expresa).
+/// Se conserva aunque se borren sus pedidos sin pagar, para los correos de ofertas; se da de baja con un clic.
+model EmailContact {
+  id           String    @id @default(cuid())
+  email        String    @unique @db.VarChar(191)
+  playerId     String?   @db.VarChar(12) // ID de Free Fire de su última compra, para recargar en un clic
+  optIn        Boolean   @default(true)
+  consentAt    DateTime? // cuándo aceptó
+  optOutAt     DateTime? // cuándo se dio de baja
+  source       String    @db.VarChar(40) // dónde aceptó (ej. «checkout-recarga») o «pedido-sin-pagar» (cliente sin permiso de ofertas)
+  /// Pedidos que dejó sin pagar y ya se borraron (el pedido se borra; el cliente queda para ver si compra después).
+  unpaidOrders Int       @default(0)
+  lastOrderAt  DateTime? // último pedido que hizo (pagado o no)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 }
 
 enum EmailCodePurpose {

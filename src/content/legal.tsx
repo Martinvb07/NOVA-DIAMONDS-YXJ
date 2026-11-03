@@ -69,8 +69,9 @@ export const LEGAL: Record<string, LegalDoc> = {
         </ul>
         <h2>5. Plazos</h2>
         <p>
-          La entrega inicia cuando se confirma el pago. Los tiempos dependen del proveedor de recargas o de la coordinación del traspaso en el caso de
-          cuentas. El estado actualizado está siempre disponible en la página de seguimiento.
+          La entrega inicia cuando se confirma el pago. Las recargas son automáticas y casi siempre llegan en segundos, pero por alta demanda,
+          mantenimiento del juego o fallas del proveedor pueden demorar hasta 24 horas; si no se pueden entregar, se reembolsa el pago. En las cuentas,
+          el tiempo depende de la coordinación del traspaso. El estado actualizado está siempre disponible en la página de seguimiento.
         </p>
         <h2 id="menores">6. Edad mínima y menores de edad</h2>
         <p>
@@ -128,14 +129,22 @@ export const LEGAL: Record<string, LegalDoc> = {
         <h2 id="finalidades">Finalidades</h2>
         <ul>
           <li>Procesar, entregar y dar seguimiento a tus pedidos.</li>
-          <li>Enviarte correos transaccionales sobre tus compras y tu cuenta (confirmaciones, códigos de acceso, estado del pedido). No enviamos publicidad.</li>
+          <li>
+            Enviarte correos transaccionales sobre tus compras y tu cuenta (confirmaciones, códigos de acceso, estado del pedido) y, si dejas un pedido sin
+            pagar, un recordatorio mientras puedas pagarlo y otro si vence, para que puedas completar la compra.
+          </li>
+          <li>
+            <strong>Solo si lo aceptas</strong> (al registrarte o en Mi cuenta): enviarte ofertas, bonos y códigos de descuento por correo, máximo uno por
+            semana. Puedes darte de baja en cualquier momento con el enlace que trae cada correo o en Mi cuenta → Perfil, y no afecta tus pedidos.
+          </li>
           <li>Atender solicitudes de soporte, reclamaciones y reembolsos.</li>
           <li>Prevenir fraude y cumplir obligaciones legales, contables y tributarias.</li>
         </ul>
         <h2 id="autorizacion">Autorización</h2>
         <p>
           Al crear tu cuenta, hacer un pedido o escribirnos, nos autorizas a tratar tus datos para estas finalidades. Siempre te lo indicamos junto al
-          formulario. Puedes revocar la autorización en cualquier momento, salvo cuando debamos conservar datos por un deber legal o contractual.
+          formulario. Las ofertas por correo necesitan una autorización aparte, que es opcional: guardamos la fecha en que la diste o la retiraste.
+          Puedes revocar la autorización en cualquier momento, salvo cuando debamos conservar datos por un deber legal o contractual.
         </p>
         <h2 id="encargados">Con quién los compartimos</h2>
         <p>Solo con proveedores que necesitamos para operar, que actúan como encargados del tratamiento y reciben únicamente lo indispensable:</p>
@@ -153,6 +162,12 @@ export const LEGAL: Record<string, LegalDoc> = {
         <ul>
           <li>Datos de tu cuenta: mientras la mantengas activa. Puedes eliminarla cuando quieras.</li>
           <li>Pedidos y pagos: el tiempo que exige la ley para soportes contables y comerciales (hasta 10 años, Código de Comercio, art. 60).</li>
+          <li>
+            Pedidos que no se pagaron (vencidos o cancelados, sin ningún cobro): se borran 12 horas después de cancelarse. Guardamos solo tu correo, tu ID
+            de jugador, cuántos pedidos quedaron sin pagar y la fecha del último, para reconocerte si vuelves y para los límites contra pedidos falsos. No te
+            enviamos ofertas sin tu permiso, y puedes pedirnos que los borremos.
+          </li>
+          <li>Si al pagar marcaste «Avísame de ofertas»: tu correo y tu ID de jugador, hasta que te des de baja.</li>
           <li>Sesiones y registros técnicos: lo necesario para seguridad; las sesiones vencen solas.</li>
         </ul>
         <h2 id="derechos">Tus derechos</h2>

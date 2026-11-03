@@ -1,6 +1,6 @@
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
-import { MessageCircle } from "lucide-react";
+import { MessageCircle, Wrench } from "lucide-react";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { getCurrentUser, isStaff } from "@/lib/auth";
@@ -9,6 +9,7 @@ import { getSettings } from "@/server/settings";
 import { publicPaymentOptions } from "@/server/integrations/payments";
 import { accountsVisible } from "@/server/catalog";
 import { CookieNotice } from "@/components/legal/cookie-notice";
+import { maintenanceNotice } from "@/domain/maintenance";
 
 export default async function StoreLayout({ children }: { children: React.ReactNode }) {
   const [settings, user, showAccounts] = await Promise.all([getSettings(), getCurrentUser().catch(() => null), accountsVisible()]);
@@ -16,9 +17,16 @@ export default async function StoreLayout({ children }: { children: React.ReactN
   if (!showAccounts && /^\/cuentas(\/|$)/.test((await headers()).get("x-pathname") ?? "")) notFound();
   const payments = publicPaymentOptions();
   const wa = whatsappLink(settings.whatsapp, `Hola ${settings.storeName}, tengo una pregunta.`);
+  const paused = maintenanceNotice(settings);
 
   return (
     <>
+      {paused && (
+        <div role="status" data-maintenance className="flex items-center justify-center gap-2 border-b border-warn-400/25 bg-warn-400/[0.08] px-4 py-2.5 text-center text-[13px] font-medium text-fg">
+          <Wrench aria-hidden className="size-4 shrink-0 text-warn-400" />
+          <span>{paused}</span>
+        </div>
+      )}
       {settings.announcement && (
         <div className="border-b border-white/[0.06] bg-ink-850 px-4 py-2 text-center text-[13px] text-fg-muted">{settings.announcement}</div>
       )}
