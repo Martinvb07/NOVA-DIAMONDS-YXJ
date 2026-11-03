@@ -1,8 +1,8 @@
+import Image from "next/image";
 /* eslint-disable @next/next/no-img-element */
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ChevronRight, CircleAlert, Clock, KeyRound, Wallet } from "lucide-react";
-import { Gem } from "@/components/brand/gem";
 import { TopUpCheckout } from "@/components/checkout/topup-checkout";
 import { JsonLd } from "@/components/seo/json-ld";
 import { Container, EmptyState } from "@/components/ui/primitives";
@@ -77,10 +77,7 @@ export default async function RecargasPage({ searchParams }: { searchParams: Pro
                   <img src={settings.topupCoverUrl} alt="Diamantes Free Fire" className="absolute inset-0 size-full object-cover" />
                 ) : (
                   <>
-                    <div className="absolute -left-1/4 top-0 h-[160%] w-1/3 rotate-[24deg] bg-white/[0.05]" />
-                    <Gem className="absolute left-1/2 top-[54%] w-[58%] -translate-x-1/2 -translate-y-1/2 rotate-[-8deg]" />
-                    <Gem className="absolute left-[16%] top-[22%] w-[16%] rotate-[16deg] opacity-80" />
-                    <Gem className="absolute right-[12%] top-[70%] w-[14%] rotate-[-20deg] opacity-80" />
+                    <Image src="/brand/diamante-nova.webp" alt="" fill priority sizes="(min-width: 1024px) 360px, 128px" className="object-cover" />
                     <span className="absolute left-[7%] top-[7%] hidden rounded-md bg-white/15 px-2 py-0.5 text-[11px] font-bold tracking-[0.16em] text-white backdrop-blur lg:block">FREE FIRE</span>
                   </>
                 )}

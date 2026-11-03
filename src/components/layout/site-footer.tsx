@@ -80,26 +80,26 @@ export function SiteFooter({ settings, payments, showAccounts = true }: { settin
       <div className="pointer-events-none absolute left-1/2 top-0 h-64 w-[900px] -translate-x-1/2 rounded-full bg-[radial-gradient(closest-side,rgba(108,180,255,0.10),transparent)]" aria-hidden />
 
       <Container className="relative">
-        {/* Llamado a la acción */}
-        <div className="relative -mb-2 mt-8 overflow-hidden rounded-[22px] sm:mt-12 bg-[linear-gradient(115deg,#0a2a5e_0%,#1167d8_55%,#4cc3ff_120%)] p-6 ring-1 ring-white/10 sm:p-8">
-          <div className="pointer-events-none absolute inset-0 opacity-25" style={{ background: "repeating-linear-gradient(115deg, transparent 0 46px, rgba(255,255,255,.08) 46px 48px)" }} aria-hidden />
-          <Gem className="pointer-events-none absolute -right-8 -top-6 w-28 rotate-[-12deg] opacity-80 sm:top-1/2 sm:-translate-y-1/2 sm:opacity-90 drop-shadow-[0_20px_40px_rgba(0,0,0,0.45)] sm:right-10 sm:w-48" />
+        {/* Llamado a la acción: mismo estilo que los banners (grafiti YXJ de fondo y diamante oficial) */}
+        <div className="relative -mb-2 mt-8 overflow-hidden rounded-[22px] bg-[radial-gradient(70%_120%_at_80%_50%,rgba(41,168,255,0.28),transparent_70%),radial-gradient(50%_100%_at_0%_100%,rgba(139,108,255,0.22),transparent_70%),linear-gradient(160deg,#081430,#03060e_70%)] p-6 ring-1 ring-nova-400/25 sm:mt-12 sm:p-8">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/brand/nova-yxj.png" alt="" aria-hidden className="pointer-events-none absolute -right-6 -top-10 h-[150%] w-auto rotate-[-9deg] opacity-20 drop-shadow-[0_0_30px_rgba(41,168,255,0.6)]" />
+          <Gem className="pointer-events-none absolute -right-6 -top-4 w-36 sm:right-16 sm:top-1/2 sm:w-52 sm:-translate-y-1/2" />
           <div className="relative max-w-xl">
-            <p className="max-w-[75%] text-[26px] font-extrabold italic leading-tight tracking-tight text-white sm:max-w-none sm:text-[34px]">¿LISTO PARA RECARGAR?</p>
-            <p className="mt-1.5 text-[14.5px] font-medium text-white/80">Pon tu ID, elige tu paquete con bonus y paga en pesos.</p>
+            <p className="text-chrome max-w-[70%] font-brand text-[24px] font-black uppercase leading-tight sm:max-w-none sm:text-[32px]">
+              ¿Listo para <span className="bg-gradient-to-r from-[#7fe3ff] via-nova-400 to-[#8b6cff] bg-clip-text text-transparent">recargar?</span>
+            </p>
+            <p className="mt-2 text-[14.5px] font-medium text-fg-muted">Pon tu ID, elige tu paquete con bonus y paga en pesos.</p>
             <div className="mt-5 grid gap-2.5 sm:flex sm:flex-wrap">
-              <Link href="/recargas" className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-white px-5 sm:h-11 text-[14px] font-bold text-ink-950 transition hover:bg-nova-300">
+              <Link href="/recargas" className="inline-flex h-12 items-center justify-center gap-2 bg-gradient-to-r from-[#7fe3ff] via-nova-400 to-[#4f7dff] px-6 font-brand text-[12px] font-bold uppercase tracking-[0.12em] text-nova-ink transition hover:brightness-110 [clip-path:polygon(12px_0,100%_0,100%_calc(100%-12px),calc(100%-12px)_100%,0_100%,0_12px)] sm:h-11">
                 Recargar diamantes <ArrowRight className="size-4" />
               </Link>
-              {showAccounts ? (
-                <Link href="/cuentas" className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-white/15 px-5 sm:h-11 text-[14px] font-semibold text-white ring-1 ring-white/25 backdrop-blur transition hover:bg-white/25">
-                  Ver cuentas
-                </Link>
-              ) : (
-                <Link href="/pedido" className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-white/15 px-5 sm:h-11 text-[14px] font-semibold text-white ring-1 ring-white/25 backdrop-blur transition hover:bg-white/25">
-                  Rastrear pedido
-                </Link>
-              )}
+              <Link
+                href={showAccounts ? "/cuentas" : "/pedido"}
+                className="inline-flex h-12 items-center justify-center gap-2 bg-white/[0.07] px-6 font-brand text-[12px] font-bold uppercase tracking-[0.12em] text-fg ring-1 ring-white/15 transition hover:bg-white/[0.12] [clip-path:polygon(12px_0,100%_0,100%_calc(100%-12px),calc(100%-12px)_100%,0_100%,0_12px)] sm:h-11"
+              >
+                {showAccounts ? "Ver cuentas" : "Rastrear pedido"}
+              </Link>
             </div>
           </div>
         </div>

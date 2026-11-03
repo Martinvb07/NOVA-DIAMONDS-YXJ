@@ -1,41 +1,19 @@
-import { useId } from "react";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 
-/** Gema facetada original (no reproduce el arte del juego). */
+/**
+ * Diamante suelto de Nova (íconos, avisos, fondos): el arte oficial del diamante con los bordes desvanecidos
+ * para que se funda con el fondo oscuro. `hue="nova"` lo vuelve violeta. Se usa con un ancho (w-…).
+ */
 export function Gem({ className, hue = "ice" }: { className?: string; hue?: "ice" | "nova" }) {
-  const id = useId().replace(/:/g, "");
-  const c = hue === "nova"
-    ? { a: "#e9fbff", b: "#5ee7ff", c: "#8b6cff", d: "#2e1a8a" }
-    : { a: "#e8f6ff", b: "#7cc8ff", c: "#2f7fe0", d: "#173a8a" };
   return (
-    <svg viewBox="0 0 120 110" className={cn("drop-shadow-[0_12px_24px_rgba(0,0,0,0.45)]", className)} aria-hidden>
-      <defs>
-        <linearGradient id={`${id}t`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor={c.a} />
-          <stop offset="1" stopColor={c.b} />
-        </linearGradient>
-        <linearGradient id={`${id}l`} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor={c.b} />
-          <stop offset="1" stopColor={c.c} />
-        </linearGradient>
-        <linearGradient id={`${id}r`} x1="1" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor={c.c} />
-          <stop offset="1" stopColor={c.d} />
-        </linearGradient>
-      </defs>
-      {/* corona */}
-      <path d="M30 8h60l26 30H4L30 8Z" fill={`url(#${id}t)`} />
-      <path d="M30 8 44 38H4L30 8Z" fill={c.b} fillOpacity="0.55" />
-      <path d="M90 8 76 38h40L90 8Z" fill={c.c} fillOpacity="0.55" />
-      <path d="M44 38 60 8l16 30H44Z" fill="#fff" fillOpacity="0.35" />
-      {/* pabellón */}
-      <path d="M4 38h40l16 66L4 38Z" fill={`url(#${id}l)`} />
-      <path d="M44 38h32l-16 66-16-66Z" fill={c.b} />
-      <path d="M76 38h40L60 104l16-66Z" fill={`url(#${id}r)`} />
-      <path d="M44 38h32l-16 66-16-66Z" fill="#fff" fillOpacity="0.12" />
-      {/* brillo */}
-      <path d="M36 14h18l-6 8H31l5-8Z" fill="#fff" fillOpacity="0.7" />
-      <path d="M4 38h112" stroke="#fff" strokeOpacity="0.5" strokeWidth="1" />
-    </svg>
+    <Image
+      src="/brand/diamante-nova.webp"
+      alt=""
+      aria-hidden
+      width={256}
+      height={256}
+      className={cn("aspect-square h-auto select-none object-cover [mask-image:radial-gradient(closest-side,#000_62%,transparent)]", hue === "nova" && "hue-rotate-[35deg]", className)}
+    />
   );
 }
