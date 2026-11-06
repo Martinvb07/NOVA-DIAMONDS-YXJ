@@ -135,7 +135,7 @@ jobs:
               console.log("== catálogo del proveedor");
               console.log("  última sincronización:", g.supplierSyncedAt || "(nunca)", "· regiones activas:", g.topupRegions || "(predeterminada)");
               const rate = Number(g.usdtCop) > 0 ? Number(g.usdtCop) : 3400;
-              console.log("  tasa USDT/COP:", rate, g.usdtCop ? "" : "(por defecto)", "· automática:", g.usdtCopAuto ?? "true (por defecto)", "· actualizada:", g.usdtCopAt || "(nunca)", "· ganancia mínima:", (g.minMarginPct ?? "20") + "% / ≤110: " + (g.minMarginSmallPct ?? "25") + "%");
+              console.log("  tasa USDT/COP:", rate, g.usdtCop ? "" : "(por defecto)", "· automática:", g.usdtCopAuto ?? "true (por defecto)", "· actualizada:", g.usdtCopAt || "(nunca)", "· ganancia mínima:", (g.minMarginPct ?? "30") + "% / ≤110: " + (g.minMarginSmallPct ?? "30") + "%");
               const n = await db.supplierProduct.count();
               console.log("  productos de Free Fire descargados:", n);
               console.log("== paquetes de la tienda");
@@ -157,6 +157,11 @@ jobs:
               await db.$disconnect();
             })().catch((e) => { console.error("  error al leer la base:", e.message); process.exit(0); });
           '
+          echo "== mantenimiento ahora"
+          s=$(env_get CRON_SECRET)
+          [ -n "$s" ] && echo "  $(curl -s --max-time 90 -H "Authorization: Bearer $s" -H "Host: novadiamonds.co" -H "X-Forwarded-Proto: https" http://127.0.0.1:3040/api/cron/maintenance | head -c 500)"
+          echo "== errores recientes del proveedor y la tasa"
+          pm2 logs nova --err --nostream --lines 300 2>/dev/null | grep -E "\[proveedor\]|maintenance|cron" | tail -n 12 | sed 's/^/  /' || true
           echo "== mantenimiento programado"
           crontab -l 2>/dev/null | grep -q "api/cron/maintenance" && echo "  ✔ cada: $(crontab -l | grep 'api/cron/maintenance' | awk '{print $1,$2,$3,$4,$5}')" || echo "  ✖ NO hay tarea de mantenimiento: las entregas pendientes no se reconsultan"
           echo "== webhook (desde el servidor)"
