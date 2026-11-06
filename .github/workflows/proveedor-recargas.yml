@@ -5,14 +5,15 @@ name: Proveedor de recargas (RechargeGame)
 #  2. Fuera de GitHub se cifra la llave gv_live_… con esa llave pública (OAEP/SHA-256) y se pasa en «clave_cifrada».
 #  3. «activar»: el servidor la descifra, la guarda en .env (TOPUP_API_KEY, TOPUP_PROVIDER=rechargegame, sin modo
 #     prueba), reinicia la tienda, sincroniza el catálogo y revisa todo. Al terminar borra el par de llaves.
-#  «revisar»: solo el informe (conexión, saldo, paquetes vinculados, pedidos y entregas recientes).
+#  «revisar»: solo el informe (conexión, saldo, paquetes vinculados, pedidos, entregas y tareas programadas).
+#  «reparar»: además reescribe las tareas programadas (cron) para que llamen a la tienda dentro del servidor.
 on:
   workflow_dispatch:
     inputs:
       accion:
         description: Qué hacer
         type: choice
-        options: [revisar, preparar, activar]
+        options: [revisar, reparar, preparar, activar]
         default: revisar
       clave_cifrada:
         description: Solo para «activar» — llave cifrada en base64 (nunca la llave en claro)
@@ -54,7 +55,7 @@ jobs:
           CIFRADA: ${{ inputs.clave_cifrada }}
         run: |
           set -euo pipefail
-          [[ "$ACCION" =~ ^(revisar|preparar|activar)$ ]] || { echo "Acción inválida"; exit 1; }
+          [[ "$ACCION" =~ ^(revisar|reparar|preparar|activar)$ ]] || { echo "Acción inválida"; exit 1; }
           [[ "$CIFRADA" =~ ^[A-Za-z0-9+/=]*$ ]] || { echo "clave_cifrada debe ser base64"; exit 1; }
           if [ "$ACCION" = activar ] && [ -z "$CIFRADA" ]; then echo "Falta clave_cifrada"; exit 1; fi
           # Todo lo que sale del servidor pasa por este filtro: nunca se imprime una llave.
@@ -162,8 +163,30 @@ jobs:
           [ -n "$s" ] && echo "  $(curl -s --max-time 90 -H "Authorization: Bearer $s" -H "Host: novadiamonds.co" -H "X-Forwarded-Proto: https" http://127.0.0.1:3040/api/cron/maintenance | head -c 500)"
           echo "== errores recientes del proveedor y la tasa"
           pm2 logs nova --err --nostream --lines 300 2>/dev/null | grep -E "\[proveedor\]|maintenance|cron" | tail -n 12 | sed 's/^/  /' || true
-          echo "== mantenimiento programado"
-          crontab -l 2>/dev/null | grep -q "api/cron/maintenance" && echo "  ✔ cada: $(crontab -l | grep 'api/cron/maintenance' | awk '{print $1,$2,$3,$4,$5}')" || echo "  ✖ NO hay tarea de mantenimiento: las entregas pendientes no se reconsultan"
+          echo "== tareas programadas (cron; llaves tapadas)"
+          if [ "$ACCION" = reparar ]; then
+            # Las tareas llaman a la tienda directo en el servidor: sin DNS, HTTPS ni redirecciones del dominio.
+            tmp=$(mktemp)
+            crontab -l 2>/dev/null | sed -E 's#https?://[^ "]+(/api/cron/[a-z-]+)#-H "Host: novadiamonds.co" -H "X-Forwarded-Proto: https" http://127.0.0.1:3040\1#' > "$tmp"
+            if ! grep -q "api/cron/maintenance" "$tmp"; then
+              s=$(env_get CRON_SECRET)
+              printf '*/2 * * * * curl -fsS -m 50 -H "Authorization: Bearer %s" -H "Host: novadiamonds.co" -H "X-Forwarded-Proto: https" http://127.0.0.1:3040/api/cron/maintenance > /dev/null\n' "$s" >> "$tmp"
+            fi
+            crontab "$tmp" && rm -f "$tmp" && echo "  ✔ tareas reescritas para llamar a la tienda dentro del servidor"
+          fi
+          crontab -l 2>/dev/null | grep "/api/cron/" | while IFS= read -r line; do
+            echo "  $(printf '%s' "$line" | sed -E 's/Bearer [^" ]+/Bearer <oculta>/')"
+            url=$(printf '%s' "$line" | grep -oE 'https?://[^ "]+/api/cron/[a-z-]+' | head -n1)
+            tok=$(printf '%s' "$line" | grep -oE 'Bearer [^" ]+' | head -n1 | cut -d' ' -f2)
+            hdrs=$(printf '%s' "$line" | grep -q 'Host: novadiamonds.co' && echo yes || echo no)
+            if [ "$hdrs" = yes ]; then
+              code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 60 -H "Authorization: Bearer $tok" -H "Host: novadiamonds.co" -H "X-Forwarded-Proto: https" "$url" || true)
+            else
+              code=$(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' --max-time 60 -H "Authorization: Bearer $tok" "$url" || true)
+            fi
+            echo "    → respuesta: $code $( [ "${code%% *}" = 200 ] && echo '✔' || echo '✖ esta tarea no está funcionando')"
+          done
+          crontab -l 2>/dev/null | grep -q "api/cron/maintenance" || echo "  ✖ NO hay tarea de mantenimiento"
           echo "== webhook (desde el servidor)"
           echo "  POST /api/webhooks/topup sin firma → $(curl -s -o /dev/null -w '%{http_code}' --max-time 10 -X POST -H 'Host: novadiamonds.co' -H 'X-Forwarded-Proto: https' -H 'Content-Type: application/json' -d '{}' http://127.0.0.1:3040/api/webhooks/topup) (se espera 400/401: rechaza lo que no viene firmado)"
           ENDSSH
