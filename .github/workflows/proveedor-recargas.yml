@@ -1,0 +1,162 @@
+name: Proveedor de recargas (RechargeGame)
+
+# Manual. Conecta la tienda con RechargeGame sin que la llave aparezca nunca en GitHub (el repositorio es público):
+#  1. «preparar»: crea en el servidor un par de llaves RSA (la privada nunca sale de ahí) y muestra la pública.
+#  2. Fuera de GitHub se cifra la llave gv_live_… con esa llave pública (OAEP/SHA-256) y se pasa en «clave_cifrada».
+#  3. «activar»: el servidor la descifra, la guarda en .env (TOPUP_API_KEY, TOPUP_PROVIDER=rechargegame, sin modo
+#     prueba), reinicia la tienda, sincroniza el catálogo y revisa todo. Al terminar borra el par de llaves.
+#  «revisar»: solo el informe (conexión, saldo, paquetes vinculados, pedidos y entregas recientes).
+on:
+  workflow_dispatch:
+    inputs:
+      accion:
+        description: Qué hacer
+        type: choice
+        options: [revisar, preparar, activar]
+        default: revisar
+      clave_cifrada:
+        description: Solo para «activar» — llave cifrada en base64 (nunca la llave en claro)
+        required: false
+        default: ""
+
+concurrency:
+  group: deploy-produccion
+  cancel-in-progress: false
+
+jobs:
+  proveedor:
+    name: RechargeGame
+    runs-on: ubuntu-latest
+    environment:
+      name: produccion
+    steps:
+      - name: Preparar clave SSH
+        env:
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          for intento in 1 2 3 4 5; do
+            ssh-keyscan -T 10 -H "$VPS_HOST" >> ~/.ssh/known_hosts 2>/dev/null && exit 0
+            sleep 5
+          done
+          echo "ssh-keyscan falló tras 5 intentos"; exit 1
+
+      - name: Ejecutar en el servidor
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_PATH: ${{ secrets.VPS_PATH }}
+          ACCION: ${{ inputs.accion }}
+          CIFRADA: ${{ inputs.clave_cifrada }}
+        run: |
+          set -euo pipefail
+          [[ "$ACCION" =~ ^(revisar|preparar|activar)$ ]] || { echo "Acción inválida"; exit 1; }
+          [[ "$CIFRADA" =~ ^[A-Za-z0-9+/=]*$ ]] || { echo "clave_cifrada debe ser base64"; exit 1; }
+          if [ "$ACCION" = activar ] && [ -z "$CIFRADA" ]; then echo "Falta clave_cifrada"; exit 1; fi
+          # Todo lo que sale del servidor pasa por este filtro: nunca se imprime una llave.
+          ssh -i ~/.ssh/deploy_key -o BatchMode=yes -o ConnectTimeout=15 "$VPS_USER@$VPS_HOST" \
+            "VPS_PATH='$VPS_PATH' ACCION='$ACCION' CIFRADA='$CIFRADA' bash -s" <<'ENDSSH' 2>&1 | sed -E 's/gv_(live|test)_[A-Za-z0-9]+/gv_\1_<oculta>/g; s/whsec_[A-Za-z0-9+\/=]+/whsec_<oculto>/g'
+          set -euo pipefail
+          export NVM_DIR="$HOME/.nvm"; [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+          cd "$VPS_PATH"
+          LLAVES="$HOME/.nova-llave-proveedor"
+          env_get() { grep -E "^$1=" .env | tail -n1 | cut -d= -f2- | sed -E 's/^"(.*)"$/\1/' || true; }
+          env_set() { # nombre valor
+            if grep -qE "^$1=" .env; then
+              tmp=$(mktemp); awk -v k="$1" -v v="$2" 'BEGIN{FS=OFS="="} $1==k{print k "=" v; next} {print}' .env > "$tmp" && cat "$tmp" > .env && rm -f "$tmp"
+            else
+              printf '\n%s=%s\n' "$1" "$2" >> .env
+            fi
+          }
+          env_del() { tmp=$(mktemp); grep -vE "^$1=" .env > "$tmp" || true; cat "$tmp" > .env; rm -f "$tmp"; }
+
+          if [ "$ACCION" = preparar ]; then
+            mkdir -p "$LLAVES" && chmod 700 "$LLAVES"
+            [ -s "$LLAVES/privada.pem" ] || openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:3072 -out "$LLAVES/privada.pem" 2>/dev/null
+            chmod 600 "$LLAVES/privada.pem"
+            echo "== llave pública para cifrar la llave del proveedor:"
+            openssl pkey -in "$LLAVES/privada.pem" -pubout
+            exit 0
+          fi
+
+          if [ "$ACCION" = activar ]; then
+            [ -s "$LLAVES/privada.pem" ] || { echo "Primero ejecuta «preparar»."; exit 1; }
+            k=$(printf '%s' "$CIFRADA" | base64 -d | openssl pkeyutl -decrypt -inkey "$LLAVES/privada.pem" -pkeyopt rsa_padding_mode:oaep -pkeyopt rsa_oaep_md:sha256 -pkeyopt rsa_mgf1_md:sha256) \
+              || { echo "No se pudo descifrar (¿se cifró con la llave pública de «preparar»?)"; exit 1; }
+            [[ "$k" =~ ^gv_(live|test)_[A-Za-z0-9]{16,}$ ]] || { echo "La llave descifrada no tiene el formato gv_live_…"; exit 1; }
+            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 -H "X-API-Key: $k" -H "Accept: application/json" "$(env_get TOPUP_API_BASE_URL | sed 's#/*$##' | grep . || echo https://api.rechargegame.games)/v1/ping" || true)
+            [ "$code" = 200 ] || { echo "RechargeGame rechazó la llave (HTTP $code). No se cambió nada."; exit 1; }
+            env_set TOPUP_PROVIDER rechargegame
+            env_set TOPUP_API_KEY "$k"
+            env_del TOPUP_TEST_MODE
+            chmod 600 .env
+            unset k
+            rm -rf "$LLAVES"
+            echo "✔ Llave guardada en .env (y el par de llaves temporal borrado)."
+            # Forzar la sincronización del catálogo en el próximo mantenimiento.
+            node --env-file=.env -e 'const {PrismaClient}=require("@prisma/client");const db=new PrismaClient();db.setting.deleteMany({where:{key:"supplierSyncedAt"}}).finally(()=>db.$disconnect())' || true
+            pm2 restart nova --update-env >/dev/null
+            for i in $(seq 1 25); do
+              [ "$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 http://127.0.0.1:3040/api/health || true)" = "200" ] && break
+              sleep 3
+            done
+            echo "✔ Tienda reiniciada."
+            s=$(env_get CRON_SECRET)
+            [ -n "$s" ] && echo "  mantenimiento: $(curl -s --max-time 90 -H "Authorization: Bearer $s" -H "Host: novadiamonds.co" -H "X-Forwarded-Proto: https" http://127.0.0.1:3040/api/cron/maintenance | head -c 400)"
+          fi
+
+          echo
+          echo "================ INFORME RECHARGEGAME ================"
+          k=$(env_get TOPUP_API_KEY); base=$(env_get TOPUP_API_BASE_URL | sed 's#/*$##'); base=${base:-https://api.rechargegame.games}
+          echo "== configuración (.env)"
+          echo "  TOPUP_PROVIDER: $(env_get TOPUP_PROVIDER | grep . || echo '(falta)')"
+          case "$k" in gv_live_*) echo "  TOPUP_API_KEY: definida, modo PRODUCCIÓN (${#k} caracteres)";; gv_test_*) echo "  TOPUP_API_KEY: definida, modo PRUEBAS";; "") echo "  TOPUP_API_KEY: ✖ falta";; *) echo "  TOPUP_API_KEY: definida, formato desconocido";; esac
+          echo "  TOPUP_TEST_MODE: $(env_get TOPUP_TEST_MODE | grep . || echo '(vacío: recargas reales)')"
+          echo "  TOPUP_WEBHOOK_SECRET: $([ -n "$(env_get TOPUP_WEBHOOK_SECRET)" ] && echo definido || echo '⚠ falta (el estado de las entregas se consulta en cada mantenimiento)')"
+          echo "  PAYMENT_PROVIDER: $(env_get PAYMENT_PROVIDER | grep . || echo '(falta)') · BOLD_TEST_MODE: $(env_get BOLD_TEST_MODE | grep . || echo '(vacío: pagos reales)')"
+          if [ -n "$k" ]; then
+            echo "== conexión con la API"
+            for p in /v1/ping /v1/balance; do
+              r=$(curl -s --max-time 20 -H "X-API-Key: $k" -H "Accept: application/json" "$base$p" || true)
+              echo "  $p → $(printf '%s' "$r" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{const j=JSON.parse(s);console.log(j.buyer?("conectado como "+j.buyer):j.balance_usdt!=null?("saldo "+j.balance_usdt+" USDT"):(j.error?.message??j.message??s.slice(0,160)))}catch{console.log("respuesta no válida: "+s.slice(0,120))}})')"
+            done
+          fi
+          unset k
+          node --env-file=.env -e '
+            const { PrismaClient } = require("@prisma/client");
+            const db = new PrismaClient();
+            (async () => {
+              const s = await db.setting.findMany({ where: { key: { in: ["supplierSyncedAt", "topupRegions", "usdtCop", "topupMargin"] } } });
+              const g = Object.fromEntries(s.map((x) => [x.key, x.value]));
+              console.log("== catálogo del proveedor");
+              console.log("  última sincronización:", g.supplierSyncedAt || "(nunca)", "· regiones activas:", g.topupRegions || "(predeterminada)", "· USDT/COP:", g.usdtCop || "-", "· margen:", (g.topupMargin || "-") + "%");
+              const n = await db.supplierProduct.count();
+              console.log("  productos de Free Fire descargados:", n);
+              console.log("== paquetes de la tienda");
+              const pk = await db.diamondPackage.findMany({ orderBy: [{ region: "asc" }, { diamonds: "asc" }], select: { diamonds: true, bonusDiamonds: true, region: true, active: true, providerSku: true, costCents: true, supplierOutOfStock: true } });
+              for (const p of pk) {
+                const ok = p.providerSku && p.providerSku.startsWith("topup/free-fire/");
+                console.log("  " + (ok ? (p.supplierOutOfStock ? "⚠ agotado " : "✔ ") : "✖ sin vincular ") + p.region + " · " + p.diamonds + "+" + p.bonusDiamonds + (p.active ? "" : " (oculto)") + (ok ? " → " + p.providerSku + (p.costCents != null ? " · costo " + (p.costCents / 100).toFixed(2) + " USDT" : "") : ""));
+              }
+              console.log("== pedidos de recarga (últimos 15)");
+              const os = await db.order.findMany({ orderBy: { createdAt: "desc" }, take: 15, select: { number: true, status: true, isTest: true, createdAt: true } });
+              for (const o of os) console.log("  " + o.number + " · " + o.status + (o.isTest ? " (prueba)" : "") + " · " + o.createdAt.toISOString().slice(0, 16));
+              if (!os.length) console.log("  (sin pedidos)");
+              const st = await db.order.groupBy({ by: ["status"], _count: true });
+              console.log("  totales:", st.map((x) => x.status + "=" + x._count).join(" · ") || "-");
+              const tx = await db.delivery.findMany({ orderBy: { createdAt: "desc" }, take: 10 });
+              console.log("== entregas al proveedor (últimas 10)");
+              for (const t of tx) console.log("  " + [t.provider, t.status, t.providerRef ? "ref ok" : "sin ref", t.createdAt.toISOString().slice(0, 16)].join(" · "));
+              if (!tx.length) console.log("  (sin entregas)");
+              await db.$disconnect();
+            })().catch((e) => { console.error("  error al leer la base:", e.message); process.exit(0); });
+          '
+          echo "== mantenimiento programado"
+          crontab -l 2>/dev/null | grep -q "api/cron/maintenance" && echo "  ✔ cada: $(crontab -l | grep 'api/cron/maintenance' | awk '{print $1,$2,$3,$4,$5}')" || echo "  ✖ NO hay tarea de mantenimiento: las entregas pendientes no se reconsultan"
+          echo "== webhook (desde el servidor)"
+          echo "  POST /api/webhooks/topup sin firma → $(curl -s -o /dev/null -w '%{http_code}' --max-time 10 -X POST -H 'Host: novadiamonds.co' -H 'X-Forwarded-Proto: https' -H 'Content-Type: application/json' -d '{}' http://127.0.0.1:3040/api/webhooks/topup) (se espera 400/401: rechaza lo que no viene firmado)"
+          ENDSSH
