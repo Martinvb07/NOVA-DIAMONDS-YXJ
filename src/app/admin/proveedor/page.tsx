@@ -174,9 +174,23 @@ export default async function SupplierAdmin() {
       <div className="mb-6 grid gap-6 lg:grid-cols-2">
         <Panel title="Tasa y margen">
           <ActionForm action={saveSupplierRatesAction} className="space-y-3">
-            <Field label="Pesos por 1 USDT" hint="Para calcular costos, márgenes y precios sugeridos.">
+            <Field
+              label="Pesos por 1 USDT"
+              hint={
+                settings.usdtCopAuto === "true"
+                  ? `Automática: dólar del día + 2 %, se renueva cada 6 horas${settings.usdtCopAt ? ` (última: ${timeAgo(new Date(settings.usdtCopAt))})` : " (se aplica en el próximo mantenimiento)"}.`
+                  : "Para calcular costos, márgenes y precios sugeridos."
+              }
+            >
               <input name="usdtCop" inputMode="numeric" defaultValue={settings.usdtCop} className="field tabular-nums" />
             </Field>
+            <label className="flex items-start gap-2.5 text-[13px] text-fg">
+              <input type="checkbox" name="usdtCopAuto" defaultChecked={settings.usdtCopAuto === "true"} className="mt-0.5 size-4" />
+              <span>
+                Actualizar la tasa sola con el dólar del día (+2 %)
+                <span className="block text-[12px] text-fg-subtle">Si con la tasa nueva un paquete queda bajo la ganancia mínima, su precio sube solo. Un salto de más del 15 % no se aplica solo.</span>
+              </span>
+            </label>
             <Field label="Margen para precios sugeridos (%)" hint="Se aplica al activar una región o al recalcular precios.">
               <input name="topupMargin" inputMode="decimal" defaultValue={settings.topupMargin} className="field tabular-nums" />
             </Field>

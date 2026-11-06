@@ -5,7 +5,7 @@ import { audit } from "@/lib/audit";
 import { requireAdmin } from "@/lib/auth";
 import { rateLimit } from "@/lib/rate-limit";
 import { DEFAULT_TOPUP_REGION, regionLabel } from "@/domain/topup-regions";
-import { enforceMinimumMargins, fetchDailyUsdCop, importRegionPackages, syncSupplierCatalog, updateEnabledRegions } from "@/server/supplier";
+import { applyDailyRate, enforceMinimumMargins, importRegionPackages, syncSupplierCatalog, updateEnabledRegions } from "@/server/supplier";
 import { saveSettings } from "@/server/settings";
 import type { ActionResult } from "./admin";
 
@@ -42,25 +42,23 @@ export async function saveSupplierRatesAction(_: ActionResult, form: FormData): 
   if (!Number.isFinite(rate) || rate < 1000 || rate > 10000) return fail("La tasa debe estar entre 1.000 y 10.000 pesos por USDT.");
   if (!Number.isFinite(margin) || margin < 0 || margin > 300) return fail("El margen debe estar entre 0 % y 300 %.");
   if (![minGeneral, minSmall].every((v) => Number.isFinite(v) && v >= 0 && v <= 80)) return fail("La ganancia mínima debe estar entre 0 % y 80 %.");
-  const values = { usdtCop: String(Math.round(rate)), topupMargin: String(Math.round(margin * 10) / 10), minMarginPct: String(Math.round(minGeneral * 10) / 10), minMarginSmallPct: String(Math.round(minSmall * 10) / 10) };
+  const auto = form.get("usdtCopAuto") === "on";
+  const values = { usdtCop: String(Math.round(rate)), usdtCopAuto: auto ? "true" : "false", topupMargin: String(Math.round(margin * 10) / 10), minMarginPct: String(Math.round(minGeneral * 10) / 10), minMarginSmallPct: String(Math.round(minSmall * 10) / 10) };
   await saveSettings(values);
   await audit({ actorId: user.id, action: "supplier.rates", entity: "Setting", data: values });
   // Con ganancia mínima, los paquetes que quedaron por debajo suben ya (nunca se bajan precios).
   const repriced = await enforceMinimumMargins();
   refresh();
-  return ok(`Tasa y márgenes guardados.${repriced.length ? ` ${repriced.length} paquete(s) subieron de precio para cumplir la ganancia mínima.` : " Ningún precio tuvo que cambiar."}`);
+  return ok(`Tasa y márgenes guardados${auto ? " (la tasa se seguirá actualizando sola con el dólar del día)" : ""}.${repriced.length ? ` ${repriced.length} paquete(s) subieron de precio para cumplir la ganancia mínima.` : " Ningún precio tuvo que cambiar."}`);
 }
 
 export async function dailyRateAction(_: ActionResult, _form: FormData): Promise<ActionResult> {
   const user = await requireAdmin();
   try {
-    const usd = await fetchDailyUsdCop();
-    // El USDT en Colombia suele costar un poco más que el dólar oficial: +2 % para no quedar corto.
-    const rate = Math.round(usd * 1.02);
-    await saveSettings({ usdtCop: String(rate) });
-    await audit({ actorId: user.id, action: "supplier.rates", entity: "Setting", data: { usdtCop: rate, source: "open.er-api.com", usd } });
+    // Desde el panel se acepta cualquier salto: lo pidió el dueño a mano.
+    const r = await applyDailyRate(user.id, { allowJump: true });
     refresh();
-    return ok(`Tasa actualizada: $${rate.toLocaleString("es-CO")} por USDT (dólar del día $${usd.toLocaleString("es-CO")} + 2 %).`);
+    return ok(`Tasa actualizada: $${r.to.toLocaleString("es-CO")} por USDT (dólar del día $${r.usd.toLocaleString("es-CO")} + 2 %).${r.repriced.length ? ` ${r.repriced.length} paquete(s) subieron de precio para cumplir la ganancia mínima.` : ""}`);
   } catch (e) {
     return fail(`No se pudo consultar la tasa del día: ${(e as Error).message}`);
   }

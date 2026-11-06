@@ -37,6 +37,8 @@ export const SETTING_DEFAULTS = {
   // Proveedor de recargas (se gestionan en Panel → Proveedor)
   topupRegions: "latam", // regiones visibles en la tienda (slugs del proveedor, separados por coma)
   usdtCop: "3400", // pesos por 1 USDT, para calcular costos y márgenes
+  usdtCopAuto: "true", // "true": la tasa se actualiza sola con el dólar del día (+2 %) desde el mantenimiento
+  usdtCopAt: "", // última actualización automática de la tasa (ISO)
   topupMargin: "30", // % de margen para precios sugeridos de regiones nuevas
   minMarginPct: "20", // ganancia mínima (% del precio de venta) de todos los paquetes; 0 = sin mínimo
   minMarginSmallPct: "25", // ganancia mínima de los paquetes de 100 diamantes o menos; 0 = la general
@@ -44,7 +46,7 @@ export const SETTING_DEFAULTS = {
 } as const;
 
 /** Claves que no se editan en Ajustes (tienen su propia pantalla). */
-export const MANAGED_SETTING_KEYS = new Set<string>(["topupCoverUrl", "topupRegions", "usdtCop", "topupMargin", "minMarginPct", "minMarginSmallPct", "supplierSyncedAt", "emailAutomationsAt"]);
+export const MANAGED_SETTING_KEYS = new Set<string>(["topupCoverUrl", "topupRegions", "usdtCop", "usdtCopAuto", "usdtCopAt", "topupMargin", "minMarginPct", "minMarginSmallPct", "supplierSyncedAt", "emailAutomationsAt"]);
 
 export type SettingKey = keyof typeof SETTING_DEFAULTS;
 export type StoreSettings = Record<SettingKey, string>;

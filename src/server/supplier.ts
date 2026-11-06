@@ -252,6 +252,53 @@ export async function fetchDailyUsdCop(): Promise<number> {
   return Math.round(cop);
 }
 
+/** Tasa de la tienda a partir del dólar del día: el USDT en Colombia suele costar un poco más que el oficial (+2 %). */
+export const usdtCopFromUsd = (usd: number) => Math.round(usd * 1.02);
+
+/** Cada cuánto se renueva la tasa automática (la fuente se actualiza una vez al día). */
+const RATE_MAX_AGE_MS = 6 * 60 * 60_000;
+/** Un salto mayor que esto frente a la tasa anterior se trata como un dato malo de la fuente y no se aplica. */
+const RATE_MAX_JUMP = 0.15;
+
+export type DailyRateResult = { usd: number; from: number; to: number; repriced: PriceChange[] };
+
+/**
+ * Aplica el dólar del día (+2 %) como tasa de la tienda y, si con la tasa nueva algún paquete queda bajo la
+ * ganancia mínima, le sube el precio (nunca baja precios). Lo usa el botón del panel y el mantenimiento.
+ */
+export async function applyDailyRate(actorId: string | null, opts: { allowJump?: boolean } = {}): Promise<DailyRateResult> {
+  const usd = await fetchDailyUsdCop();
+  const to = usdtCopFromUsd(usd);
+  const { usdtCop: from } = await supplierRate();
+  if (!opts.allowJump && Math.abs(to - from) / from > RATE_MAX_JUMP) {
+    throw new Error(`La tasa del día ($${to.toLocaleString("es-CO")}) cambia más de ${RATE_MAX_JUMP * 100} % frente a la actual ($${from.toLocaleString("es-CO")}); no se aplicó sola. Revísala y guárdala en Panel → Proveedor.`);
+  }
+  await saveSettings({ usdtCop: String(to), usdtCopAt: new Date().toISOString() });
+  if (to !== from) await audit({ actorId, action: "supplier.rates", entity: "Setting", data: { usdtCop: to, before: from, source: "open.er-api.com", usd, auto: actorId == null } });
+  const repriced = await enforceMinimumMargins();
+  return { usd, from, to, repriced };
+}
+
+/** Último intento fallido (en memoria): tras un error se espera 1 h antes de volver a consultar la fuente. */
+let rateFailedAt = 0;
+
+/** Mantenimiento: si la tasa automática está activa y tiene más de 6 h, la renueva. Nunca lanza error. */
+export async function ensureDailyRate(): Promise<boolean> {
+  const s = await getSettings();
+  if (s.usdtCopAuto !== "true") return false;
+  if (s.usdtCopAt && Date.now() - new Date(s.usdtCopAt).getTime() < RATE_MAX_AGE_MS) return false;
+  if (Date.now() - rateFailedAt < 60 * 60_000) return false;
+  try {
+    // La primera vez se acepta cualquier salto: la tasa por defecto (3.400) puede estar muy lejos de la real.
+    await applyDailyRate(null, { allowJump: !s.usdtCopAt });
+    return true;
+  } catch (e) {
+    rateFailedAt = Date.now();
+    console.error("[proveedor] no se pudo actualizar la tasa del día:", (e as Error).message);
+    return false;
+  }
+}
+
 export type PlayerRegionCheck =
   | { ok: true; playerId: string; region: string; regionSlug: string }
   | { ok: false; error: string; region?: string | null };

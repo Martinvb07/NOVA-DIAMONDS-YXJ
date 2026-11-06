@@ -3,7 +3,7 @@ import { safeEqual } from "@/lib/crypto";
 import { env } from "@/lib/env";
 import { expireStaleOrders, pollPendingDeliveries, pollPendingPayments, retryStuckDeliveries, sendPaymentReminders } from "@/server/orders";
 import { activeTopUpProvider } from "@/server/integrations/topup";
-import { ensureFreshCatalog } from "@/server/supplier";
+import { ensureDailyRate, ensureFreshCatalog } from "@/server/supplier";
 import { runEmailAutomations } from "@/server/marketing";
 import { purgeCancelledOrders } from "@/server/retention";
 import { getSettings } from "@/server/settings";
@@ -17,6 +17,7 @@ export const dynamic = "force-dynamic";
  *  - consulta al proveedor las entregas pendientes de confirmación,
  *  - reintenta entregas detenidas por saldo/agotado/red (misma referencia: no cobra dos veces),
  *  - actualiza costos y existencias del catálogo del proveedor cada 15 minutos (y aplica la ganancia mínima),
+ *  - actualiza la tasa USDT/COP con el dólar del día (+2 %) cada 6 horas, si está activada en Panel → Proveedor,
  *  - correos automáticos: «comprar de nuevo» y ofertas a quien las aceptó (cada 10 min, de 8 a. m. a 9 p. m.),
  *  - borra los pedidos cancelados sin pago 24 h después del correo «comprar de nuevo» (si está activado).
  * Requiere: Authorization: Bearer <CRON_SECRET>
@@ -29,6 +30,8 @@ export async function GET(req: Request) {
   const supplier = activeTopUpProvider()?.id === "rechargegame";
   // Primero se confirman los pagos que la pasarela ya aprobó; luego se vencen los que siguen sin pagar.
   const paymentsConfirmed = await pollPendingPayments().catch(() => 0);
+  // Tasa del día antes del catálogo: la ganancia mínima se calcula con la tasa vigente.
+  const rateUpdated = supplier ? await ensureDailyRate() : false;
   const [expired, remindersSent, deliveries, retried, catalogSynced] = await Promise.all([
     expireStaleOrders(),
     sendPaymentReminders().catch(() => 0),
@@ -46,5 +49,5 @@ export async function GET(req: Request) {
     console.error("[pedidos] no se pudieron borrar los cancelados:", (e as Error).message);
     return 0;
   }) : 0;
-  return NextResponse.json({ ok: true, expired, paymentsConfirmed, remindersSent, deliveriesUpdated: deliveries, deliveriesRetried: retried, catalogSynced, emails: emails && { recovery: emails.recovery, firstPurchase: emails.firstPurchase, winback: emails.winback }, cancelledPurged: purged });
+  return NextResponse.json({ ok: true, expired, paymentsConfirmed, remindersSent, deliveriesUpdated: deliveries, deliveriesRetried: retried, catalogSynced, rateUpdated, emails: emails && { recovery: emails.recovery, firstPurchase: emails.firstPurchase, winback: emails.winback }, cancelledPurged: purged });
 }
