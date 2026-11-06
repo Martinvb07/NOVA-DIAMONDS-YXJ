@@ -16,7 +16,7 @@ export const dynamic = "force-dynamic";
  *  - consulta a la pasarela los pagos pendientes recientes (por si el webhook se demora),
  *  - consulta al proveedor las entregas pendientes de confirmación,
  *  - reintenta entregas detenidas por saldo/agotado/red (misma referencia: no cobra dos veces),
- *  - actualiza costos y existencias del catálogo del proveedor cada 3 horas,
+ *  - actualiza costos y existencias del catálogo del proveedor cada 15 minutos (y aplica la ganancia mínima),
  *  - correos automáticos: «comprar de nuevo» y ofertas a quien las aceptó (cada 10 min, de 8 a. m. a 9 p. m.),
  *  - borra los pedidos cancelados sin pago 24 h después del correo «comprar de nuevo» (si está activado).
  * Requiere: Authorization: Bearer <CRON_SECRET>

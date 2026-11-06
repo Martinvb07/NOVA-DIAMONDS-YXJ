@@ -1,7 +1,23 @@
 import { createHmac } from "node:crypto";
 import { describe, expect, it } from "vitest";
-import { charmPrice, costInCop, isFreeFireProductKey, marginOf, MIN_MARGIN_PCT, parseRegionList, regionalPrice, sameRegion, splitBonus, suggestedPrice } from "@/domain/topup-regions";
+import { charmPrice, costInCop, floorPrice, isFreeFireProductKey, marginOf, MIN_MARGIN_PCT, minMarginFor, parseRegionList, regionalPrice, sameRegion, splitBonus, suggestedPrice } from "@/domain/topup-regions";
 import { verifyStandardWebhook } from "@/server/integrations/payments/signatures";
+
+describe("ganancia mínima", () => {
+  it("el precio mínimo deja al menos ese % de ganancia sobre el precio de venta", () => {
+    for (const [cost, rate, pct] of [[345, 3400, 20], [68, 4100, 25], [3180, 3900, 15]] as const) {
+      const floor = floorPrice(cost, rate, pct);
+      expect(marginOf(floor, cost, rate)!).toBeGreaterThanOrEqual(pct);
+    }
+  });
+
+  it("los paquetes de 100 diamantes usan su propio mínimo; los demás, el general", () => {
+    const rule = { general: 20, small: 25 };
+    expect(minMarginFor({ diamonds: 100, bonusDiamonds: 10 }, rule)).toBe(25);
+    expect(minMarginFor({ diamonds: 310, bonusDiamonds: 31 }, rule)).toBe(20);
+    expect(minMarginFor({ diamonds: 100, bonusDiamonds: 10 }, { general: 20, small: 0 })).toBe(20);
+  });
+});
 
 describe("precios por región", () => {
   it("convierte el costo en USDT a pesos", () => {

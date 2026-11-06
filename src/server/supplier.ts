@@ -1,17 +1,20 @@
 import "server-only";
 import { db } from "@/lib/db";
-import { compareRegions, DEFAULT_TOPUP_REGION, isFreeFireProductKey, parseRegionList, regionalPrice, regionLabel, splitBonus, suggestedPrice } from "@/domain/topup-regions";
+import { compareRegions, DEFAULT_TOPUP_REGION, floorPrice, isFreeFireProductKey, minMarginFor, type MinMarginRule, parseRegionList, regionalPrice, regionLabel, splitBonus, suggestedPrice } from "@/domain/topup-regions";
+import { audit } from "@/lib/audit";
 import { supplierApi } from "./integrations/topup/rechargegame";
 import type { TopUpProvider } from "./integrations/topup/types";
 import { getSettings, saveSettings } from "./settings";
 
 /**
  * Catálogo del proveedor mayorista: copia local + vínculo con los paquetes de la tienda.
- * Los precios de venta nunca se cambian solos: la sincronización solo actualiza costos y existencias.
+ * La sincronización actualiza costos y existencias; los precios de venta solo cambian solos para subir hasta la
+ * ganancia mínima que fijó el dueño (Panel → Proveedor), nunca para bajar.
  */
 
 const GAME = "free-fire";
-const CATALOG_MAX_AGE_MS = 3 * 60 * 60_000;
+/** Cada cuánto se renueva el catálogo desde el mantenimiento (corre cada 2 min): costos y agotados al día. */
+const CATALOG_MAX_AGE_MS = 15 * 60_000;
 const toCents = (usdt: number | string) => Math.round(Number(usdt) * 100);
 const isDiamondPack = (p: { unit: string | null; amount: number | null; delivery: string }) => p.unit === "Diamonds" && (p.amount ?? 0) > 0 && p.delivery === "player_id";
 
@@ -19,11 +22,37 @@ export async function supplierRate() {
   const s = await getSettings();
   const usdtCop = Number(s.usdtCop) > 0 ? Number(s.usdtCop) : 3400;
   const margin = Number(s.topupMargin) >= 0 ? Number(s.topupMargin) : 30;
-  return { usdtCop, margin, regions: parseRegionList(s.topupRegions), syncedAt: s.supplierSyncedAt ? new Date(s.supplierSyncedAt) : null };
+  const pct = (v: string | undefined) => (Number(v) > 0 && Number(v) < 90 ? Number(v) : 0);
+  const minMargin: MinMarginRule = { general: pct(s.minMarginPct), small: pct(s.minMarginSmallPct) };
+  return { usdtCop, margin, minMargin, regions: parseRegionList(s.topupRegions), syncedAt: s.supplierSyncedAt ? new Date(s.supplierSyncedAt) : null };
+}
+
+export type PriceChange = { id: string; name: string; region: string; from: number; to: number };
+
+/**
+ * Ganancia mínima: sube el precio de los paquetes activos (con costo conocido) que quedaron por debajo, por
+ * ejemplo porque el proveedor subió su costo. Nunca baja un precio. Queda registrado en la auditoría.
+ */
+export async function enforceMinimumMargins(): Promise<PriceChange[]> {
+  const { usdtCop, minMargin } = await supplierRate();
+  if (!(minMargin.general > 0 || minMargin.small > 0)) return [];
+  const pkgs = await db.diamondPackage.findMany({ where: { active: true, costCents: { not: null } }, select: { id: true, name: true, region: true, diamonds: true, bonusDiamonds: true, price: true, compareAtPrice: true, costCents: true } });
+  const changes: PriceChange[] = [];
+  for (const p of pkgs) {
+    const pct = minMarginFor(p, minMargin);
+    if (!(pct > 0)) continue;
+    const floor = floorPrice(p.costCents!, usdtCop, pct);
+    if (p.price >= floor) continue;
+    // Condicional sobre el precio leído: si alguien lo editó justo ahora, no se pisa.
+    const r = await db.diamondPackage.updateMany({ where: { id: p.id, price: p.price }, data: { price: floor, ...(p.compareAtPrice != null && p.compareAtPrice <= floor ? { compareAtPrice: null } : {}) } });
+    if (r.count) changes.push({ id: p.id, name: p.name, region: p.region, from: p.price, to: floor });
+  }
+  if (changes.length) await audit({ actorId: null, action: "package.min_margin", entity: "DiamondPackage", data: { usdtCop, minMargin, changes } });
+  return changes;
 }
 
 let syncing: Promise<SyncSummary> | null = null;
-export type SyncSummary = { products: number; regions: number; linked: number; updated: number };
+export type SyncSummary = { products: number; regions: number; linked: number; updated: number; repriced: number };
 
 /** Descarga el catálogo de Free Fire y actualiza costo/agotado de los paquetes vinculados. */
 export function syncSupplierCatalog(): Promise<SyncSummary> {
@@ -34,6 +63,14 @@ export function syncSupplierCatalog(): Promise<SyncSummary> {
 async function doSync(): Promise<SyncSummary> {
   const { groups } = await supplierApi.catalog();
   const now = new Date();
+  // Protección: un catálogo vacío o al que le falta la mayoría de los productos vinculados es una falla del
+  // proveedor, no «dejó de vender todo». No se aplica (se conserva la copia anterior) y se reintenta después.
+  const incoming = new Set(groups.flatMap((g) => g.products.map((p) => p.product_key.slice(0, 191))));
+  const linkedActive = (await db.diamondPackage.findMany({ where: { active: true, providerSku: { not: null } }, select: { providerSku: true } })).map((p) => p.providerSku!);
+  const stillThere = linkedActive.filter((k) => incoming.has(k)).length;
+  if (incoming.size === 0 || (linkedActive.length >= 4 && stillThere < linkedActive.length / 2)) {
+    throw new Error(`El proveedor devolvió un catálogo ${incoming.size === 0 ? "vacío" : `incompleto (${stillThere} de ${linkedActive.length} productos vinculados)`}: no se aplicó y se conserva la copia anterior.`);
+  }
   const rows = groups.flatMap((g) =>
     g.products.map((p) => ({
       productKey: p.product_key.slice(0, 191),
@@ -76,10 +113,15 @@ async function doSync(): Promise<SyncSummary> {
     }
   }
   await saveSettings({ supplierSyncedAt: now.toISOString() });
-  return { products: rows.length, regions: groups.length, linked, updated };
+  // Costos nuevos: ningún paquete queda por debajo de la ganancia mínima.
+  const repriced = await enforceMinimumMargins().catch((e) => {
+    console.error("[proveedor] no se pudo aplicar la ganancia mínima:", (e as Error).message);
+    return [] as PriceChange[];
+  });
+  return { products: rows.length, regions: groups.length, linked, updated, repriced: repriced.length };
 }
 
-/** Sincroniza si la copia local tiene más de 3 horas (o nunca se sincronizó). Nunca lanza error. */
+/** Sincroniza si la copia local tiene más de 15 minutos (o nunca se sincronizó). Nunca lanza error. */
 export async function ensureFreshCatalog(): Promise<boolean> {
   const { syncedAt } = await supplierRate();
   if (syncedAt && Date.now() - syncedAt.getTime() < CATALOG_MAX_AGE_MS) return false;

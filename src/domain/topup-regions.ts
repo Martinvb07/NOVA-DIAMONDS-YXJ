@@ -83,6 +83,26 @@ export function suggestedPrice(costCents: number, usdtCop: number, marginPct: nu
 }
 
 /** Margen sobre el precio de venta, en %. null si no se conoce el costo. */
+/** Precio más bajo que deja al menos `marginPct` % de ganancia sobre el precio de venta (redondeado como los sugeridos). */
+export function floorPrice(costCents: number, usdtCop: number, marginPct: number): number {
+  const pct = Math.min(Math.max(marginPct, 0), 90) / 100;
+  const raw = ((costCents / 100) * usdtCop) / (1 - pct);
+  return charmPrice(Math.max(1000, Math.ceil((raw + 1) / 500) * 500));
+}
+
+/** Ganancia mínima de la tienda (Panel → Proveedor): general y para los paquetes de 100 diamantes o menos. */
+export type MinMarginRule = { general: number; small: number };
+
+/** Hasta este total de diamantes un paquete cuenta como «de 100 diamantes» (100 + 10 = 110). */
+export const SMALL_PACK_MAX = 110;
+
+/** Ganancia mínima (%) que le toca a un paquete; 0 = sin mínimo. */
+export function minMarginFor(p: { diamonds: number; bonusDiamonds: number }, rule: MinMarginRule): number {
+  const total = p.diamonds + p.bonusDiamonds;
+  if (p.diamonds > 0 && total <= SMALL_PACK_MAX && rule.small > 0) return rule.small;
+  return rule.general;
+}
+
 export function marginOf(priceCop: number, costCents: number | null | undefined, usdtCop: number): number | null {
   if (costCents == null || !priceCop) return null;
   return Math.round(((priceCop - costInCop(costCents, usdtCop)) / priceCop) * 1000) / 10;

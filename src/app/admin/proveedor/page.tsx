@@ -9,7 +9,7 @@ import { db } from "@/lib/db";
 import { env } from "@/lib/env";
 import { formatDate, formatMoney } from "@/lib/money";
 import { timeAgo } from "@/components/store/time-ago";
-import { costInCop, MIN_MARGIN_PCT, regionFlag } from "@/domain/topup-regions";
+import { costInCop, MIN_MARGIN_PCT, regionFlag, SMALL_PACK_MAX } from "@/domain/topup-regions";
 import { dailyRateAction, repriceRegionAction, saveSupplierRatesAction, syncSupplierAction, toggleRegionAction } from "@/app/actions/supplier";
 import { activeTopUpProvider } from "@/server/integrations/topup";
 import { supplierApi } from "@/server/integrations/topup/rechargegame";
@@ -161,7 +161,7 @@ export default async function SupplierAdmin() {
           value={env.topup.forceTest ? "Solo prueba" : "Automáticos"}
           hint={env.topup.forceTest ? "TOPUP_TEST_MODE=true: nada se cobra ni se entrega." : "Pagos de prueba → pedido de prueba (gratis). Pagos reales → recarga real."}
         />
-        <Stat label="Catálogo" value={rate.syncedAt ? timeAgo(rate.syncedAt) : "Nunca"} hint={`${rate.syncedAt ? `${formatDate(rate.syncedAt)} · ` : ""}Costos y existencias se actualizan cada 3 horas. Tus precios no cambian solos.`} />
+        <Stat label="Catálogo" value={rate.syncedAt ? timeAgo(rate.syncedAt) : "Nunca"} hint={`${rate.syncedAt ? `${formatDate(rate.syncedAt)} · ` : ""}Costos y existencias se actualizan solos cada 15 minutos; los precios solo suben si quedan bajo la ganancia mínima.`} />
       </div>
 
       {balanceUsdt != null && largest > 0 && balanceUsdt * 100 < largest && (
@@ -180,6 +180,15 @@ export default async function SupplierAdmin() {
             <Field label="Margen para precios sugeridos (%)" hint="Se aplica al activar una región o al recalcular precios.">
               <input name="topupMargin" inputMode="decimal" defaultValue={settings.topupMargin} className="field tabular-nums" />
             </Field>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Field label="Ganancia mínima (%)" hint="Del precio de venta, como el % que ves en Paquetes. 0 = sin mínimo.">
+                <input name="minMarginPct" inputMode="decimal" defaultValue={settings.minMarginPct} className="field tabular-nums" />
+              </Field>
+              <Field label={`Ganancia mínima ≤ ${SMALL_PACK_MAX} diamantes (%)`} hint="Paquetes de 100 diamantes: la comisión fija de la pasarela pesa más. 0 = la general.">
+                <input name="minMarginSmallPct" inputMode="decimal" defaultValue={settings.minMarginSmallPct} className="field tabular-nums" />
+              </Field>
+            </div>
+            <p className="text-[12px] text-fg-subtle">El catálogo se actualiza solo cada 15 minutos. Si el proveedor sube un costo, el precio sube solo hasta la ganancia mínima. Nunca se bajan precios solos.</p>
             <SubmitButton size="sm">Guardar</SubmitButton>
           </ActionForm>
           <ActionForm action={dailyRateAction} className="mt-3 border-t border-white/[0.06] pt-3">

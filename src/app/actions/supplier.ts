@@ -5,7 +5,7 @@ import { audit } from "@/lib/audit";
 import { requireAdmin } from "@/lib/auth";
 import { rateLimit } from "@/lib/rate-limit";
 import { DEFAULT_TOPUP_REGION, regionLabel } from "@/domain/topup-regions";
-import { fetchDailyUsdCop, importRegionPackages, syncSupplierCatalog, updateEnabledRegions } from "@/server/supplier";
+import { enforceMinimumMargins, fetchDailyUsdCop, importRegionPackages, syncSupplierCatalog, updateEnabledRegions } from "@/server/supplier";
 import { saveSettings } from "@/server/settings";
 import type { ActionResult } from "./admin";
 
@@ -27,7 +27,7 @@ export async function syncSupplierAction(_: ActionResult, _form: FormData): Prom
     const r = await syncSupplierCatalog();
     await audit({ actorId: user.id, action: "supplier.sync", entity: "SupplierProduct", data: r });
     refresh();
-    return ok(`Catálogo actualizado: ${r.products} productos en ${r.regions} regiones${r.linked ? ` · ${r.linked} paquete(s) vinculados` : ""}${r.updated ? ` · ${r.updated} paquete(s) con costo o existencias nuevos` : ""}.`);
+    return ok(`Catálogo actualizado: ${r.products} productos en ${r.regions} regiones${r.linked ? ` · ${r.linked} paquete(s) vinculados` : ""}${r.updated ? ` · ${r.updated} paquete(s) con costo o existencias nuevos` : ""}${r.repriced ? ` · ${r.repriced} precio(s) subieron a la ganancia mínima` : ""}.`);
   } catch (e) {
     return fail(`No se pudo sincronizar: ${(e as Error).message}`);
   }
@@ -37,13 +37,18 @@ export async function saveSupplierRatesAction(_: ActionResult, form: FormData): 
   const user = await requireAdmin();
   const rate = Number(str(form, "usdtCop").replace(/[.\s]/g, "").replace(",", "."));
   const margin = Number(str(form, "topupMargin").replace(",", "."));
+  const pct = (k: string) => Number(str(form, k).replace(",", ".") || "0");
+  const [minGeneral, minSmall] = [pct("minMarginPct"), pct("minMarginSmallPct")];
   if (!Number.isFinite(rate) || rate < 1000 || rate > 10000) return fail("La tasa debe estar entre 1.000 y 10.000 pesos por USDT.");
   if (!Number.isFinite(margin) || margin < 0 || margin > 300) return fail("El margen debe estar entre 0 % y 300 %.");
-  const values = { usdtCop: String(Math.round(rate)), topupMargin: String(Math.round(margin * 10) / 10) };
+  if (![minGeneral, minSmall].every((v) => Number.isFinite(v) && v >= 0 && v <= 80)) return fail("La ganancia mínima debe estar entre 0 % y 80 %.");
+  const values = { usdtCop: String(Math.round(rate)), topupMargin: String(Math.round(margin * 10) / 10), minMarginPct: String(Math.round(minGeneral * 10) / 10), minMarginSmallPct: String(Math.round(minSmall * 10) / 10) };
   await saveSettings(values);
   await audit({ actorId: user.id, action: "supplier.rates", entity: "Setting", data: values });
+  // Con ganancia mínima, los paquetes que quedaron por debajo suben ya (nunca se bajan precios).
+  const repriced = await enforceMinimumMargins();
   refresh();
-  return ok("Tasa y margen guardados. Los precios actuales no cambian; usa «Recalcular precios» en la región que quieras.");
+  return ok(`Tasa y márgenes guardados.${repriced.length ? ` ${repriced.length} paquete(s) subieron de precio para cumplir la ganancia mínima.` : " Ningún precio tuvo que cambiar."}`);
 }
 
 export async function dailyRateAction(_: ActionResult, _form: FormData): Promise<ActionResult> {
