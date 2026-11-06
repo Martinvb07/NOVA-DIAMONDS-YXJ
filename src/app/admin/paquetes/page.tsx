@@ -121,6 +121,7 @@ export default async function PackagesAdmin({ searchParams }: { searchParams: Pr
               <span className={p.active && p.available && !p.supplierOutOfStock ? "text-ok-400" : "text-fg-subtle"}>
                 {!p.active ? "Inactivo" : p.supplierOutOfStock ? "Agotado en el proveedor" : p.available ? "Disponible" : "Agotado"}
               </span>
+              {p.manualPrice && <span className="rounded-[5px] bg-white/[0.06] px-1.5 py-0.5 text-[11px] font-medium text-fg-muted">Precio fijo</span>}
               {p.isDemo && <DemoBadge label="PRECIO DEMO" />}
               <span className="ml-auto text-fg-subtle">{p._count.orders} pedidos · Editar ▾</span>
             </summary>
@@ -203,7 +204,9 @@ function PackageForm({ pkg, region, products, usdtCop }: { pkg?: DiamondPackage;
         <Check name="active" label="Activo (visible)" defaultChecked={pkg?.active ?? true} />
         <Check name="available" label="Disponible para comprar" defaultChecked={pkg?.available ?? true} />
         <Check name="featured" label="Destacado" defaultChecked={pkg?.featured} />
+        <Check name="manualPrice" label="Precio fijo (la ganancia mínima no lo cambia)" defaultChecked={pkg?.manualPrice} />
       </div>
+      <p className="mt-2 text-[12px] text-fg-subtle">Si pones un precio por debajo de la ganancia mínima, se guarda igual y queda como precio fijo.</p>
       <div className="mt-4">
         <SubmitButton size="sm">{pkg ? "Guardar cambios" : "Crear paquete"}</SubmitButton>
       </div>

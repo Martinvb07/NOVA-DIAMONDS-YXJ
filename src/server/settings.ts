@@ -40,8 +40,8 @@ export const SETTING_DEFAULTS = {
   usdtCopAuto: "true", // "true": la tasa se actualiza sola con el dólar del día (+2 %) desde el mantenimiento
   usdtCopAt: "", // última actualización automática de la tasa (ISO)
   topupMargin: "30", // % de margen para precios sugeridos de regiones nuevas
-  minMarginPct: "20", // ganancia mínima (% del precio de venta) de todos los paquetes; 0 = sin mínimo
-  minMarginSmallPct: "25", // ganancia mínima de los paquetes de 100 diamantes o menos; 0 = la general
+  minMarginPct: "30", // ganancia mínima (% del precio de venta) de todos los paquetes; 0 = sin mínimo
+  minMarginSmallPct: "30", // ganancia mínima de los paquetes de 100 diamantes o menos; 0 = la general
   supplierSyncedAt: "", // última sincronización del catálogo (ISO)
 } as const;
 

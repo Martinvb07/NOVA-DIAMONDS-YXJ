@@ -36,7 +36,8 @@ export type PriceChange = { id: string; name: string; region: string; from: numb
 export async function enforceMinimumMargins(): Promise<PriceChange[]> {
   const { usdtCop, minMargin } = await supplierRate();
   if (!(minMargin.general > 0 || minMargin.small > 0)) return [];
-  const pkgs = await db.diamondPackage.findMany({ where: { active: true, costCents: { not: null } }, select: { id: true, name: true, region: true, diamonds: true, bonusDiamonds: true, price: true, compareAtPrice: true, costCents: true } });
+  // Los paquetes con precio fijo (puesto a mano) no se tocan.
+  const pkgs = await db.diamondPackage.findMany({ where: { active: true, manualPrice: false, costCents: { not: null } }, select: { id: true, name: true, region: true, diamonds: true, bonusDiamonds: true, price: true, compareAtPrice: true, costCents: true } });
   const changes: PriceChange[] = [];
   for (const p of pkgs) {
     const pct = minMarginFor(p, minMargin);

@@ -136,12 +136,18 @@ export async function savePackageAction(_: ActionResult, form: FormData): Promis
   }
   if (product && product.regionSlug !== d.region) return fail(`El producto del proveedor es de la región «${product.regionName}». Cambia la región del paquete.`);
 
-  // Ganancia mínima (Panel → Proveedor): un paquete activo no se puede guardar más barato que eso.
-  if (product && bool(form, "active")) {
+  // Precio fijo: el dueño decide. Si lo marca, o si pone un precio por debajo de la ganancia mínima
+  // (Panel → Proveedor), se guarda tal cual y la ganancia mínima automática ya no lo cambia.
+  let manualPrice = bool(form, "manualPrice");
+  let belowFloor: { pct: number; floor: number } | null = null;
+  if (product) {
     const { usdtCop, minMargin } = await supplierRate();
     const pct = minMarginFor(d, minMargin);
     const floor = pct > 0 ? floorPrice(product.priceCents, usdtCop, pct) : 0;
-    if (d.price < floor) return fail(`Con la ganancia mínima de ${pct} %, este paquete debe costar al menos $${floor.toLocaleString("es-CO")}. Si quieres venderlo más barato, baja la ganancia mínima en Proveedor.`);
+    if (d.price < floor) {
+      belowFloor = { pct, floor };
+      manualPrice = true;
+    }
   }
 
   const data = {
@@ -156,6 +162,7 @@ export async function savePackageAction(_: ActionResult, form: FormData): Promis
     region: d.region,
     costCents: product?.priceCents ?? null,
     supplierOutOfStock: product?.outOfStock ?? false,
+    manualPrice,
     available: bool(form, "available"),
     active: bool(form, "active"),
     featured: bool(form, "featured"),
@@ -173,7 +180,9 @@ export async function savePackageAction(_: ActionResult, form: FormData): Promis
   }
   revalidatePath("/admin/paquetes");
   revalidatePath("/");
-  return ok("Paquete guardado.");
+  revalidatePath("/recargas");
+  if (belowFloor) return ok(`Paquete guardado con precio fijo: queda por debajo de la ganancia mínima de ${belowFloor.pct} % (mínimo sugerido $${belowFloor.floor.toLocaleString("es-CO")}) y no se ajustará solo.`);
+  return ok(manualPrice ? "Paquete guardado con precio fijo: la ganancia mínima no lo cambiará." : "Paquete guardado.");
 }
 
 /** Aplica un % de bonificación a todos los paquetes (bonus = diamantes × % redondeado). */

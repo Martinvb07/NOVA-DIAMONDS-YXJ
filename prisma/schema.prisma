@@ -170,6 +170,7 @@ model DiamondPackage {
   region             String       @default("latam") @db.VarChar(60) // región del juego (slug del proveedor)
   costCents          Int? // costo del proveedor en centavos de USDT (última sincronización)
   supplierOutOfStock Boolean      @default(false) // el proveedor lo marcó agotado
+  manualPrice        Boolean      @default(false) // precio fijado a mano: la ganancia mínima no lo sube sola
   isDemo             Boolean      @default(false)
   createdAt          DateTime     @default(now())
   updatedAt          DateTime     @updatedAt

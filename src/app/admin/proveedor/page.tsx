@@ -202,7 +202,7 @@ export default async function SupplierAdmin() {
                 <input name="minMarginSmallPct" inputMode="decimal" defaultValue={settings.minMarginSmallPct} className="field tabular-nums" />
               </Field>
             </div>
-            <p className="text-[12px] text-fg-subtle">El catálogo se actualiza solo cada 15 minutos. Si el proveedor sube un costo, el precio sube solo hasta la ganancia mínima. Nunca se bajan precios solos.</p>
+            <p className="text-[12px] text-fg-subtle">El catálogo se actualiza solo cada 15 minutos. Si el proveedor sube un costo, el precio sube solo hasta la ganancia mínima. Nunca se bajan precios solos, y los paquetes con «Precio fijo» (en Diamantes y precios) no se tocan.</p>
             <SubmitButton size="sm">Guardar</SubmitButton>
           </ActionForm>
           <ActionForm action={dailyRateAction} className="mt-3 border-t border-white/[0.06] pt-3">
