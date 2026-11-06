@@ -130,17 +130,19 @@ jobs:
             const { PrismaClient } = require("@prisma/client");
             const db = new PrismaClient();
             (async () => {
-              const s = await db.setting.findMany({ where: { key: { in: ["supplierSyncedAt", "topupRegions", "usdtCop", "topupMargin"] } } });
+              const s = await db.setting.findMany({ where: { key: { in: ["supplierSyncedAt", "topupRegions", "usdtCop", "usdtCopAt", "usdtCopAuto", "topupMargin", "minMarginPct", "minMarginSmallPct"] } } });
               const g = Object.fromEntries(s.map((x) => [x.key, x.value]));
               console.log("== catálogo del proveedor");
-              console.log("  última sincronización:", g.supplierSyncedAt || "(nunca)", "· regiones activas:", g.topupRegions || "(predeterminada)", "· USDT/COP:", g.usdtCop || "-", "· margen:", (g.topupMargin || "-") + "%");
+              console.log("  última sincronización:", g.supplierSyncedAt || "(nunca)", "· regiones activas:", g.topupRegions || "(predeterminada)");
+              const rate = Number(g.usdtCop) > 0 ? Number(g.usdtCop) : 3400;
+              console.log("  tasa USDT/COP:", rate, g.usdtCop ? "" : "(por defecto)", "· automática:", g.usdtCopAuto ?? "true (por defecto)", "· actualizada:", g.usdtCopAt || "(nunca)", "· ganancia mínima:", (g.minMarginPct ?? "20") + "% / ≤110: " + (g.minMarginSmallPct ?? "25") + "%");
               const n = await db.supplierProduct.count();
               console.log("  productos de Free Fire descargados:", n);
               console.log("== paquetes de la tienda");
-              const pk = await db.diamondPackage.findMany({ orderBy: [{ region: "asc" }, { diamonds: "asc" }], select: { diamonds: true, bonusDiamonds: true, region: true, active: true, providerSku: true, costCents: true, supplierOutOfStock: true } });
+              const pk = await db.diamondPackage.findMany({ orderBy: [{ region: "asc" }, { diamonds: "asc" }], select: { diamonds: true, bonusDiamonds: true, region: true, active: true, providerSku: true, costCents: true, supplierOutOfStock: true, price: true } });
               for (const p of pk) {
                 const ok = p.providerSku && p.providerSku.startsWith("topup/free-fire/");
-                console.log("  " + (ok ? (p.supplierOutOfStock ? "⚠ agotado " : "✔ ") : "✖ sin vincular ") + p.region + " · " + p.diamonds + "+" + p.bonusDiamonds + (p.active ? "" : " (oculto)") + (ok ? " → " + p.providerSku + (p.costCents != null ? " · costo " + (p.costCents / 100).toFixed(2) + " USDT" : "") : ""));
+                console.log("  " + (ok ? (p.supplierOutOfStock ? "⚠ agotado " : "✔ ") : "✖ sin vincular ") + p.region + " · " + p.diamonds + "+" + p.bonusDiamonds + (p.active ? "" : " (oculto)") + (ok ? " → " + p.providerSku + (p.costCents != null ? " · costo " + (p.costCents / 100).toFixed(2) + " USDT ≈ $" + Math.round(p.costCents / 100 * rate).toLocaleString("es-CO") : "") : "") + " · precio $" + p.price.toLocaleString("es-CO") + (p.costCents != null ? " · ganancia " + Math.round((1 - (p.costCents / 100 * rate) / p.price) * 100) + "%" : ""));
               }
               console.log("== pedidos de recarga (últimos 15)");
               const os = await db.order.findMany({ orderBy: { createdAt: "desc" }, take: 15, select: { number: true, status: true, isTest: true, createdAt: true } });
