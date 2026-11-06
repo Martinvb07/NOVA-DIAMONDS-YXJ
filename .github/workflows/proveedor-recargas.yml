@@ -167,11 +167,11 @@ jobs:
           if [ "$ACCION" = reparar ]; then
             # Las tareas llaman a la tienda directo en el servidor: sin DNS, HTTPS ni redirecciones del dominio.
             tmp=$(mktemp)
-            crontab -l 2>/dev/null | sed -E 's#https?://[^ "]+(/api/cron/[a-z-]+)#-H "Host: novadiamonds.co" -H "X-Forwarded-Proto: https" http://127.0.0.1:3040\1#' > "$tmp"
-            if ! grep -q "api/cron/maintenance" "$tmp"; then
-              s=$(env_get CRON_SECRET)
-              printf '*/2 * * * * curl -fsS -m 50 -H "Authorization: Bearer %s" -H "Host: novadiamonds.co" -H "X-Forwarded-Proto: https" http://127.0.0.1:3040/api/cron/maintenance > /dev/null\n' "$s" >> "$tmp"
-            fi
+            # La tarea de mantenimiento se vuelve a escribir entera con la llave CRON_SECRET actual del .env.
+            s=$(env_get CRON_SECRET)
+            [ ${#s} -ge 24 ] || { echo "  ✖ CRON_SECRET falta o es muy corta en .env"; exit 1; }
+            crontab -l 2>/dev/null | grep -v "api/cron/maintenance" | sed -E 's#https?://[^ "]+(/api/cron/[a-z-]+)#-H "Host: novadiamonds.co" -H "X-Forwarded-Proto: https" http://127.0.0.1:3040\1#' > "$tmp" || true
+            printf '*/2 * * * * curl -fsS -m 50 -H "Authorization: Bearer %s" -H "Host: novadiamonds.co" -H "X-Forwarded-Proto: https" http://127.0.0.1:3040/api/cron/maintenance > /dev/null\n' "$s" >> "$tmp"
             crontab "$tmp" && rm -f "$tmp" && echo "  ✔ tareas reescritas para llamar a la tienda dentro del servidor"
           fi
           crontab -l 2>/dev/null | grep "/api/cron/" | while IFS= read -r line; do
