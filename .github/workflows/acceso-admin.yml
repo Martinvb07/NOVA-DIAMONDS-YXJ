@@ -1,0 +1,88 @@
+name: Acceso del administrador
+
+# Manual: cambia la contraseña de un administrador y restablece su 2FA (lo configura de nuevo al entrar
+# por la dirección secreta). Cierra sus sesiones y reinicia la tienda.
+# La contraseña nunca pasa por aquí: se entrega solo su huella scrypt (scrypt$16384$8$1$sal$hash),
+# generada fuera, así que no queda en los registros de GitHub.
+on:
+  workflow_dispatch:
+    inputs:
+      huella:
+        description: Huella scrypt de la contraseña nueva (no la contraseña)
+        required: true
+      correo:
+        description: Correo del administrador (vacío = el único ADMIN)
+        required: false
+        default: ""
+
+concurrency:
+  group: deploy-produccion
+  cancel-in-progress: false
+
+jobs:
+  acceso:
+    name: Cambiar contraseña y restablecer 2FA
+    runs-on: ubuntu-latest
+    environment:
+      name: produccion
+    steps:
+      - name: Preparar clave SSH
+        env:
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          for intento in 1 2 3 4 5; do
+            ssh-keyscan -T 10 -H "$VPS_HOST" >> ~/.ssh/known_hosts 2>/dev/null && exit 0
+            sleep 5
+          done
+          echo "ssh-keyscan falló tras 5 intentos"; exit 1
+
+      - name: Cambiar y reiniciar
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_PATH: ${{ secrets.VPS_PATH }}
+          HUELLA: ${{ inputs.huella }}
+          CORREO: ${{ inputs.correo }}
+        run: |
+          set -euo pipefail
+          [[ "$HUELLA" =~ ^scrypt\$16384\$8\$1\$[A-Za-z0-9+/=]{24}\$[A-Za-z0-9+/=]{88}$ ]] || { echo "Huella inválida"; exit 1; }
+          [[ -z "$CORREO" || "$CORREO" =~ ^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$ ]] || { echo "Correo inválido"; exit 1; }
+          ssh -i ~/.ssh/deploy_key -o BatchMode=yes -o ConnectTimeout=15 "$VPS_USER@$VPS_HOST" \
+            "VPS_PATH='$VPS_PATH' HUELLA='$HUELLA' CORREO='$CORREO' bash -s" <<'ENDSSH'
+          set -euo pipefail
+          export NVM_DIR="$HOME/.nvm"; [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+          cd "$VPS_PATH"
+          node --env-file=.env -e '
+            const { PrismaClient, Prisma } = require("@prisma/client");
+            const db = new PrismaClient();
+            const correo = (process.env.CORREO || "").trim().toLowerCase();
+            const oculto = (e) => e.replace(/^(.{2}).*(@.*)$/, "$1***$2");
+            (async () => {
+              const admins = await db.user.findMany({ where: correo ? { email: correo, role: "ADMIN" } : { role: "ADMIN" }, select: { id: true, email: true } });
+              if (admins.length !== 1) {
+                console.error(correo ? "No hay un ADMIN con ese correo." : "Hay " + admins.length + " ADMIN; indica el correo.");
+                admins.forEach((a) => console.error("  - " + oculto(a.email)));
+                process.exit(1);
+              }
+              const a = admins[0];
+              await db.user.update({
+                where: { id: a.id },
+                data: { passwordHash: process.env.HUELLA, hasPassword: true, disabled: false, totpSecret: null, totpPendingSecret: null, totpEnabledAt: null, totpLastStep: null, recoveryCodes: Prisma.DbNull },
+              });
+              const s = await db.session.deleteMany({ where: { userId: a.id } });
+              await db.auditLog.create({ data: { actorId: null, action: "auth.staff_password_2fa_reset_ci", entity: "User", entityId: a.id } });
+              console.log("Contraseña cambiada y 2FA restablecido para " + oculto(a.email) + " (" + s.count + " sesiones cerradas).");
+            })().catch((e) => { console.error(e.message); process.exit(1); }).finally(() => db.$disconnect());
+          '
+          pm2 restart nova >/dev/null
+          for i in $(seq 1 25); do
+            [ "$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 http://127.0.0.1:3040/api/health || true)" = "200" ] && { echo "Tienda en línea."; exit 0; }
+            sleep 3
+          done
+          echo "!! La tienda no respondió tras reiniciar"; exit 1
+          ENDSSH
