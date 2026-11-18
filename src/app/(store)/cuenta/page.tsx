@@ -338,7 +338,7 @@ export default async function AccountHome({ searchParams }: { searchParams: Prom
                   <li key={o.id} className="flex gap-3.5 rounded-[16px] bg-ink-850 p-3.5 ring-1 ring-white/[0.07] transition hover:ring-white/15">
                     <Link href={link} className="relative size-[76px] shrink-0 overflow-hidden rounded-[12px] ring-1 ring-white/10">
                       {o.type === "TOPUP" && item.diamonds ? (
-                        <DiamondCover tier={tierFor(item.diamonds)} diamonds={item.diamonds} />
+                        <DiamondCover tier={tierFor(item.diamonds)} diamonds={item.diamonds} plain />
                       ) : image ? (
                         <img src={image} alt="" className="size-full object-cover" />
                       ) : (

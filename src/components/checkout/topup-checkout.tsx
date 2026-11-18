@@ -67,7 +67,7 @@ function PackageOption({ p, selected, onSelect }: { p: PackageView; selected: bo
     >
       <input type="radio" name="package" className="sr-only" checked={selected} disabled={!p.available} onChange={onSelect} />
       <div className="w-12 shrink-0 overflow-hidden rounded-md sm:w-14">
-        <DiamondCover tier={tierFor(p.diamonds)} diamonds={p.diamonds} />
+        <DiamondCover tier={tierFor(p.diamonds)} diamonds={p.diamonds} plain />
       </div>
       <div className="min-w-0 flex-1">
         <p className="text-[16px] font-bold tabular-nums leading-tight">

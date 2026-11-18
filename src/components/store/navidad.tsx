@@ -33,7 +33,7 @@ export function ChristmasDecor() {
 /** Paisaje de invierno (aurora, colinas nevadas, pinos de hielo con luces y la estrella nova) encima del pie de página. */
 export function ChristmasLandscape() {
   return (
-    <div aria-hidden className="pointer-events-none relative z-[1] mt-10 -mb-10 sm:mt-16 sm:-mb-16">
+    <div aria-hidden className="pointer-events-none relative z-[1] mt-6 -mb-10 sm:mt-8 sm:-mb-16">
       <img src="/temporada/paisaje.svg" alt="" loading="lazy" decoding="async" draggable={false} className="block h-[90px] w-full object-cover object-bottom sm:h-[150px]" />
     </div>
   );

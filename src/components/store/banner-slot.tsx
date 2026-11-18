@@ -3,6 +3,7 @@ import type { BannerSlot as Slot } from "@/domain/banner-slots";
 import { currentSeason, seasonalBanner } from "@/domain/season";
 import { getSettings } from "@/server/settings";
 import { PromoBanners } from "./promo-banners";
+import { SectionHead } from "./section-head";
 
 /**
  * Inserta los banners activos de una ubicación. Si no hay ninguno, no renderiza nada,
@@ -13,11 +14,18 @@ export async function BannerSlot({
   variant,
   label,
   className,
+  eyebrow,
+  title,
+  sub,
 }: {
   slot: Slot;
   variant: "carousel" | "pair" | "wide" | "stack";
   label: string;
   className?: string;
+  /** Encabezado de sección opcional: solo se muestra si hay banners (nunca queda un título sin contenido). */
+  eyebrow?: string;
+  title?: string;
+  sub?: string;
 }) {
   const rows = await db.promoBanner
     .findMany({
@@ -33,6 +41,7 @@ export async function BannerSlot({
   const banners = rows.map((b) => seasonalBanner(b, season));
   return (
     <div className={className}>
+      {title && <SectionHead eyebrow={eyebrow} title={title} sub={sub} />}
       <PromoBanners banners={banners} variant={variant} label={label} />
     </div>
   );

@@ -79,7 +79,7 @@ export default async function OrderPage({ params, searchParams }: { params: Prom
       <div className="flex flex-col gap-4 rounded-[18px] bg-ink-850 p-4 ring-1 ring-white/[0.08] sm:flex-row sm:items-center sm:p-5">
         <div className="relative size-16 shrink-0 overflow-hidden rounded-[12px] sm:size-[72px]">
           {isTopup ? (
-            <DiamondCover tier={tierFor(order.item.diamonds!)} diamonds={order.item.diamonds!} />
+            <DiamondCover tier={tierFor(order.item.diamonds!)} diamonds={order.item.diamonds!} plain />
           ) : order.image ? (
             <Image src={order.image} alt="" fill sizes="72px" unoptimized={order.image.endsWith(".svg")} className="object-cover" />
           ) : (
