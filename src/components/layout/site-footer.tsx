@@ -85,7 +85,7 @@ export function SiteFooter({ settings, payments, showAccounts = true }: { settin
           {/* Navidad: nieve en el borde (fondo de globals.css) */}
           <span aria-hidden className="season-cap" />
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/brand/nova-yxj.png" alt="" aria-hidden className="pointer-events-none absolute -right-6 -top-10 h-[150%] w-auto rotate-[-9deg] opacity-20 drop-shadow-[0_0_30px_rgba(41,168,255,0.6)]" />
+          <img src="/brand/nova-yxj-360.webp" alt="" aria-hidden loading="lazy" decoding="async" className="pointer-events-none absolute -right-6 -top-10 h-[150%] w-auto rotate-[-9deg] opacity-20 drop-shadow-[0_0_30px_rgba(41,168,255,0.6)]" />
           <Gem className="pointer-events-none absolute -right-6 -top-4 w-36 sm:right-16 sm:top-1/2 sm:w-52 sm:-translate-y-1/2" />
           <div className="relative max-w-xl">
             <p className="text-chrome max-w-[70%] font-brand text-[24px] font-black uppercase leading-tight sm:max-w-none sm:text-[32px]">

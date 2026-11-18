@@ -13,7 +13,8 @@ import { env } from "@/lib/env";
 const inter = localFont({ src: "../fonts/inter-latin-wght-normal.woff2", variable: "--font-inter", display: "swap", weight: "100 900" });
 const sora = localFont({ src: "../fonts/sora-latin-wght-normal.woff2", variable: "--font-sora", display: "swap", weight: "100 800" });
 const brand = localFont({ src: "../fonts/orbitron-latin-wght-normal.woff2", variable: "--font-orbitron", display: "swap", weight: "400 900" });
-const mono = localFont({ src: "../fonts/jetbrains-mono-latin-wght-normal.woff2", variable: "--font-mono-face", display: "swap", weight: "100 800" });
+// La de números (IDs, códigos) no se precarga: no es la letra de lo primero que se ve y así no compite con el contenido.
+const mono = localFont({ src: "../fonts/jetbrains-mono-latin-wght-normal.woff2", variable: "--font-mono-face", display: "swap", weight: "100 800", preload: false });
 
 export async function generateMetadata(): Promise<Metadata> {
   const [s, withAccounts] = await Promise.all([getSettings(), accountsVisible()]);

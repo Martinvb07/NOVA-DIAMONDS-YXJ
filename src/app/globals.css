@@ -400,3 +400,7 @@
   .xmas-bulbs, .xmas-aurora, [data-season="navidad"] .season-star { animation: none; }
   .xmas-snow { display: none; }
 }
+/* Celulares: una sola capa de nieve (menos trabajo para la tarjeta gráfica al deslizar). */
+@media (max-width: 639px) {
+  .xmas-sway-b { display: none; }
+}

@@ -78,14 +78,14 @@ export default async function HomePage() {
               <Link
                 key={label}
                 href={href}
-                className="group flex w-[76px] shrink-0 snap-start flex-col items-center gap-2 text-center sm:w-auto sm:flex-row sm:items-center sm:gap-3 sm:rounded-[16px] sm:bg-ink-850 sm:p-3 sm:text-left sm:ring-1 sm:ring-white/[0.07] sm:transition sm:hover:-translate-y-0.5 sm:hover:bg-ink-800 sm:hover:ring-nova-400/30"
+                className="group flex w-[76px] shrink-0 snap-start flex-col items-center gap-2 text-center sm:w-auto sm:rounded-[16px] sm:bg-ink-850 sm:px-2 sm:py-3.5 sm:ring-1 sm:ring-white/[0.07] sm:transition sm:hover:-translate-y-0.5 sm:hover:bg-ink-800 sm:hover:ring-nova-400/30 lg:flex-row lg:gap-3 lg:p-3 lg:text-left"
               >
                 <span className="grid size-14 shrink-0 place-items-center rounded-[18px] bg-gradient-to-b from-ink-750 to-ink-850 shadow-[0_1px_0_0_rgb(255_255_255/0.06)_inset] ring-1 ring-white/[0.07] transition active:scale-95 sm:size-11 sm:rounded-[12px] sm:bg-gradient-to-br sm:from-nova-400/20 sm:to-plasma-400/15 sm:ring-nova-400/25">
                   <Icon className="size-6 text-nova-300 transition-transform group-hover:-translate-y-0.5 sm:size-5" strokeWidth={2.2} />
                 </span>
                 <span className="min-w-0">
-                  <span className="block text-[12px] font-medium leading-tight text-fg-muted sm:truncate sm:text-[13.5px] sm:font-semibold sm:text-fg">{label}</span>
-                  <span className="hidden truncate text-[11.5px] text-fg-subtle sm:mt-0.5 sm:block">{hint}</span>
+                  <span className="block text-[12px] font-medium leading-tight text-fg-muted sm:text-[13px] sm:font-semibold sm:text-fg lg:truncate lg:text-[13.5px]">{label}</span>
+                  <span className="hidden truncate text-[11.5px] text-fg-subtle lg:mt-0.5 lg:block">{hint}</span>
                 </span>
               </Link>
             ))}
@@ -96,7 +96,7 @@ export default async function HomePage() {
         {packages.length > 0 && (
           <section id="diamantes" className="scroll-mt-24">
             <SectionHead eyebrow="Free Fire · directo a tu ID" title="Recargas de diamantes" sub={bonusPct ? `Todos con +${bonusPct}% de bonus · precio final en pesos` : "Precio final en pesos"} href="/recargas" cta="Ver todo" />
-            <div className="grid grid-cols-2 gap-x-3 gap-y-5 min-[480px]:grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 lg:gap-x-4">
+            <div className="grid grid-cols-2 gap-x-3 gap-y-5 min-[480px]:grid-cols-3 sm:gap-x-4 lg:grid-cols-6">
               {packages.map((p) => (
                 <ProductTile
                   key={p.id}

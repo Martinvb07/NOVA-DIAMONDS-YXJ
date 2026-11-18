@@ -37,6 +37,8 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   images: {
     formats: ["image/avif", "image/webp"],
+    // Fotos subidas (cada una con su nombre propio): la versión optimizada se guarda 7 días, no 60 segundos.
+    minimumCacheTTL: 604800,
     // Las imágenes SVG se muestran sin pasar por el optimizador (unoptimized): el optimizador no acepta SVG.
     dangerouslyAllowSVG: false,
     contentDispositionType: "attachment",
@@ -51,10 +53,14 @@ const nextConfig: NextConfig = {
     return [{ source: "/ofertas", destination: "/recargas", permanent: false }];
   },
   async headers() {
+    // Archivos de /public (portadas, banners, logos): Next los sirve con «max-age=0» y el navegador los volvía a pedir
+    // en cada visita. Un día de caché y, pasado ese día, se muestran al instante mientras se revisa si cambiaron.
+    const publicAssetCache = { key: "Cache-Control", value: "public, max-age=86400, stale-while-revalidate=604800" };
     return [
       { source: "/:path*", headers: securityHeaders },
       // Logos de la marca: los correos los cargan desde la bandeja del cliente (otro origen).
-      { source: "/brand/:path*", headers: [{ key: "Cross-Origin-Resource-Policy", value: "cross-origin" }] },
+      { source: "/brand/:path*", headers: [{ key: "Cross-Origin-Resource-Policy", value: "cross-origin" }, publicAssetCache] },
+      { source: "/:dir(portadas|promo|pagos|temporada)/:path*", headers: [publicAssetCache] },
     ];
   },
 };

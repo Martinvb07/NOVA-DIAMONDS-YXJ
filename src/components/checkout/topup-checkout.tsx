@@ -72,7 +72,7 @@ function PackageOption({ p, selected, onSelect }: { p: PackageView; selected: bo
       <div className="min-w-0 flex-1">
         <p className="text-[16px] font-bold tabular-nums leading-tight">
           {formatNumber(p.diamonds)}
-          {p.bonusDiamonds > 0 && <span className="text-sky-400"> + {formatNumber(p.bonusDiamonds)} Bonus</span>}
+          {p.bonusDiamonds > 0 && <span className="whitespace-nowrap text-sky-400"> + {formatNumber(p.bonusDiamonds)} Bonus</span>}
         </p>
         <p className="mt-0.5 truncate text-[11.5px] text-fg-muted">
           {p.available ? `Recibes ${formatNumber(p.diamonds + p.bonusDiamonds)} diamantes` : "Agotado"}
@@ -265,7 +265,7 @@ export function TopUpCheckout({ packages: allPackages, regions, initialRegion, p
         title={`${multiRegion ? 2 : 1}. Elige la cantidad`}
         aside={<span className="text-[12px] text-fg-subtle">{multiRegion && regionInfo ? `${regionInfo.label} · ` : ""}Precio final, impuestos incluidos</span>}
       >
-        <div role="radiogroup" aria-label="Cantidad de diamantes" className="grid grid-cols-[minmax(0,1fr)] gap-2.5 sm:grid-cols-2">
+        <div role="radiogroup" aria-label="Cantidad de diamantes" className="grid grid-cols-[minmax(0,1fr)] gap-2.5 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
           {packages.map((p) => (
             <PackageOption
               key={p.id}

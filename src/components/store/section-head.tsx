@@ -10,7 +10,7 @@ export function SectionHead({ eyebrow, title, sub, href, cta }: { eyebrow?: stri
     <div className="mb-4 flex items-end justify-between gap-4 sm:mb-6">
       <div className="min-w-0">
         {eyebrow && (
-          <p className="mb-1.5 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.18em] text-nova-300">
+          <p className="mb-1.5 flex items-center gap-2 truncate text-[10.5px] font-bold uppercase tracking-[0.16em] text-nova-300 sm:text-[11px] sm:tracking-[0.18em]">
             <span aria-hidden className="h-[2px] w-5 rounded-full bg-gradient-to-r from-nova-400 to-plasma-400" />
             {eyebrow}
           </p>

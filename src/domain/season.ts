@@ -36,5 +36,5 @@ export const isSeasonalImage = (url: string) => url.startsWith("/promo/nova/navi
 /** Banner de Navidad para el carrusel del inicio (va de primero; los del panel siguen igual detrás). */
 export function seasonBanner(season: Season | null) {
   if (season !== "navidad") return null;
-  return { id: "temporada-navidad", title: "Feliz Navidad: regala diamantes directo a su ID", imageUrl: "/promo/nova/navidad/hero-navidad.webp", imageMobileUrl: "/promo/nova/navidad/m/hero-navidad.webp", href: "/recargas" };
+  return { id: "temporada-navidad", title: "Feliz Navidad: regala diamantes directo a su ID", imageUrl: "/promo/nova/navidad/hero-navidad.svg", imageMobileUrl: "/promo/nova/navidad/m/hero-navidad.svg", href: "/recargas" };
 }

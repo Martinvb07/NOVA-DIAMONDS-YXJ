@@ -120,11 +120,11 @@ export function PromoBanners({ banners, variant = "carousel", label = "Promocion
   return (
     <section aria-label={label} className="group/row relative" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)} onTouchStart={() => setPaused(true)}>
       <div ref={ref} className={variant === "wide" ? wideRow : row}>
-        {banners.map((b, i) =>
+        {banners.map((b) =>
           variant === "wide" ? (
-            <BannerLink key={b.id} b={b} priority={i === 0} mobile={wideMobile} sizes="(min-width:1280px) 1200px, 100vw" className={cn("w-full snap-start rounded-none ring-0 sm:rounded-[18px] sm:ring-1", wideMobile ? "aspect-[800/520] sm:aspect-[1600/400]" : "aspect-[1600/400]")} />
+            <BannerLink key={b.id} b={b} mobile={wideMobile} sizes="(min-width:1280px) 1200px, 100vw" className={cn("w-full snap-start rounded-none ring-0 sm:rounded-[18px] sm:ring-1", wideMobile ? "aspect-[800/520] sm:aspect-[1600/400]" : "aspect-[1600/400]")} />
           ) : (
-            <BannerLink key={b.id} b={b} priority={i < 2} sizes="(min-width:1024px) 600px, 88vw" className={cn("aspect-[1200/630] w-[88%] snap-start sm:w-[calc(50%-8px)]", variant === "rail" && "lg:w-[calc((100%-32px)/3)]")} />
+            <BannerLink key={b.id} b={b} sizes="(min-width:1024px) 600px, 88vw" className={cn("aspect-[1200/630] w-[88%] snap-start sm:w-[calc(50%-8px)]", variant === "rail" && "lg:w-[calc((100%-32px)/3)]")} />
           ),
         )}
       </div>
