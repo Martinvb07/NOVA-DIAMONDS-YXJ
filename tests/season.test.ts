@@ -25,17 +25,17 @@ describe("Navidad de cristal", () => {
   });
 
   it("cambia los banners de la marca por su versión navideña y deja los subidos al panel", () => {
-    const marca = { imageUrl: "/promo/nova/hero-bonus.svg", imageMobileUrl: "/promo/nova/m/hero-bonus.svg" };
-    expect(seasonalBanner(marca, "navidad")).toEqual({ imageUrl: "/promo/nova/navidad/hero-bonus.svg", imageMobileUrl: "/promo/nova/navidad/m/hero-bonus.svg" });
+    const marca = { imageUrl: "/promo/nova2/hero-bonus.webp", imageMobileUrl: "/promo/nova2/m/hero-bonus.webp" };
+    expect(seasonalBanner(marca, "navidad")).toEqual({ imageUrl: "/promo/nova2/navidad/hero-bonus.webp", imageMobileUrl: "/promo/nova2/navidad/m/hero-bonus.webp" });
     expect(seasonalBanner(marca, null)).toEqual(marca);
-    const propio = { imageUrl: "/uploads/mi-banner.svg", imageMobileUrl: null };
+    const propio = { imageUrl: "/uploads/mi-banner.webp", imageMobileUrl: null };
     expect(seasonalBanner(propio, "navidad")).toEqual(propio);
-    expect(isSeasonalImage("/promo/nova/navidad/hero-bonus.svg")).toBe(true);
+    expect(isSeasonalImage("/promo/nova2/navidad/hero-bonus.webp")).toBe(true);
     expect(isSeasonalImage(propio.imageUrl)).toBe(false);
   });
 
   it("el banner «Feliz Navidad» solo existe en temporada", () => {
-    expect(seasonBanner("navidad")?.imageUrl).toBe("/promo/nova/navidad/hero-navidad.svg");
+    expect(seasonBanner("navidad")?.imageUrl).toBe("/promo/nova2/navidad/hero-navidad.webp");
     expect(seasonBanner(null)).toBeNull();
   });
 });

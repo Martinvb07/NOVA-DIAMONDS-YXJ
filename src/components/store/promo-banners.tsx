@@ -105,7 +105,7 @@ export function PromoBanners({ banners, variant = "carousel", label = "Promocion
   const row = "-mx-4 flex snap-x snap-mandatory scroll-px-4 gap-3 overflow-x-auto scroll-smooth px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:scroll-px-0 sm:gap-4 sm:px-0 [&::-webkit-scrollbar]:hidden";
 
   // Franjas anchas: de borde a borde en móvil para que el texto se lea.
-  const wideRow = "-mx-4 flex snap-x snap-mandatory overflow-x-auto scroll-smooth [scrollbar-width:none] sm:mx-0 sm:gap-4 [&::-webkit-scrollbar]:hidden";
+  const wideRow = "flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-smooth [scrollbar-width:none] sm:gap-4 [&::-webkit-scrollbar]:hidden";
 
   if (variant === "pair" || variant === "stack") {
     return (
@@ -122,7 +122,7 @@ export function PromoBanners({ banners, variant = "carousel", label = "Promocion
       <div ref={ref} className={variant === "wide" ? wideRow : row}>
         {banners.map((b) =>
           variant === "wide" ? (
-            <BannerLink key={b.id} b={b} mobile={wideMobile} sizes="(min-width:1280px) 1200px, 100vw" className={cn("w-full snap-start rounded-none ring-0 sm:rounded-[18px] sm:ring-1", wideMobile ? "aspect-[800/520] sm:aspect-[1600/400]" : "aspect-[1600/400]")} />
+            <BannerLink key={b.id} b={b} mobile={wideMobile} sizes="(min-width:1280px) 1200px, 100vw" className={cn("w-full snap-start", wideMobile ? "aspect-[800/520] sm:aspect-[1600/400]" : "aspect-[1600/400]")} />
           ) : (
             <BannerLink key={b.id} b={b} sizes="(min-width:1024px) 600px, 88vw" className={cn("aspect-[1200/630] w-[88%] snap-start sm:w-[calc(50%-8px)]", variant === "rail" && "lg:w-[calc((100%-32px)/3)]")} />
           ),
