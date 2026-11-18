@@ -20,6 +20,8 @@ export function DiamondCover({ tier, diamonds, bonus = 0, plain = false, classNa
     <div className={cn("relative aspect-square overflow-hidden bg-[#02040d]", className)} style={{ containerType: "inline-size" }} aria-hidden>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src={`/portadas/paquete-${t}.svg`} alt="" decoding="async" draggable={false} className="absolute inset-0 size-full" />
+      {/* Navidad: nieve arriba y una esfera de cristal (fondos de globals.css; fuera de temporada no se descargan). */}
+      <span aria-hidden className="season-cover pointer-events-none absolute inset-0" />
 
       {/* Bonus: etiqueta azul neón con esquina cortada, arriba a la izquierda */}
       {!plain && bonus > 0 && (

@@ -10,6 +10,8 @@ import { publicPaymentOptions } from "@/server/integrations/payments";
 import { accountsVisible } from "@/server/catalog";
 import { CookieNotice } from "@/components/legal/cookie-notice";
 import { maintenanceNotice } from "@/domain/maintenance";
+import { currentSeason } from "@/domain/season";
+import { ChristmasDecor, ChristmasLandscape } from "@/components/store/navidad";
 
 export default async function StoreLayout({ children }: { children: React.ReactNode }) {
   const [settings, user, showAccounts] = await Promise.all([getSettings(), getCurrentUser().catch(() => null), accountsVisible()]);
@@ -18,9 +20,11 @@ export default async function StoreLayout({ children }: { children: React.ReactN
   const payments = publicPaymentOptions();
   const wa = whatsappLink(settings.whatsapp, `Hola ${settings.storeName}, tengo una pregunta.`);
   const paused = maintenanceNotice(settings);
+  // Navidad: decoración encima del diseño de siempre (se enciende en Ajustes y se apaga sola el 1 de enero).
+  const season = currentSeason(settings.seasonTheme);
 
   return (
-    <>
+    <div data-season={season ?? undefined}>
       {paused && (
         <div role="status" data-maintenance className="flex items-center justify-center gap-2 border-b border-warn-400/25 bg-warn-400/[0.08] px-4 py-2.5 text-center text-[13px] font-medium text-fg">
           <Wrench aria-hidden className="size-4 shrink-0 text-warn-400" />
@@ -36,7 +40,11 @@ export default async function StoreLayout({ children }: { children: React.ReactN
         showAccounts={showAccounts}
         user={user ? { name: user.name, email: user.email, staff: isStaff(user.role), avatarUrl: user.avatarUrl, avatarPreset: user.avatarPreset } : null}
       />
-      <main id="contenido">{children}</main>
+      <main id="contenido" className={season ? "relative" : undefined}>
+        {season === "navidad" && <ChristmasDecor />}
+        {children}
+      </main>
+      {season === "navidad" && <ChristmasLandscape />}
       <SiteFooter settings={settings} payments={payments} showAccounts={showAccounts} />
       <CookieNotice />
       {wa && (
@@ -53,6 +61,6 @@ export default async function StoreLayout({ children }: { children: React.ReactN
           </a>
         </aside>
       )}
-    </>
+    </div>
   );
 }

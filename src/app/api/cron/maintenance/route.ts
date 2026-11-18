@@ -6,7 +6,9 @@ import { activeTopUpProvider } from "@/server/integrations/topup";
 import { ensureDailyRate, ensureFreshCatalog } from "@/server/supplier";
 import { runEmailAutomations } from "@/server/marketing";
 import { purgeCancelledOrders } from "@/server/retention";
-import { getSettings } from "@/server/settings";
+import { getSettings, saveSettings } from "@/server/settings";
+import { christmasOver } from "@/domain/season";
+import { audit } from "@/lib/audit";
 
 export const dynamic = "force-dynamic";
 
@@ -20,6 +22,7 @@ export const dynamic = "force-dynamic";
  *  - actualiza la tasa USDT/COP con el dólar del día (+2 %) cada 6 horas, si está activada en Panel → Proveedor,
  *  - correos automáticos: «comprar de nuevo» y ofertas a quien las aceptó (cada 10 min, de 8 a. m. a 9 p. m.),
  *  - borra los pedidos cancelados sin pago 24 h después del correo «comprar de nuevo» (si está activado).
+ *  - el 1 de enero vuelve la tienda al diseño normal (Ajustes → Temporada queda en «Normal»).
  * Requiere: Authorization: Bearer <CRON_SECRET>
  */
 export async function GET(req: Request) {
@@ -49,5 +52,14 @@ export async function GET(req: Request) {
     console.error("[pedidos] no se pudieron borrar los cancelados:", (e as Error).message);
     return 0;
   }) : 0;
-  return NextResponse.json({ ok: true, expired, paymentsConfirmed, remindersSent, deliveriesUpdated: deliveries, deliveriesRetried: retried, catalogSynced, rateUpdated, emails: emails && { recovery: emails.recovery, firstPurchase: emails.firstPurchase, winback: emails.winback }, cancelledPurged: purged });
+  const seasonEnded = await endChristmasIfOver().catch(() => false);
+  return NextResponse.json({ ok: true, seasonEnded, expired, paymentsConfirmed, remindersSent, deliveriesUpdated: deliveries, deliveriesRetried: retried, catalogSynced, rateUpdated, emails: emails && { recovery: emails.recovery, firstPurchase: emails.firstPurchase, winback: emails.winback }, cancelledPurged: purged });
+}
+
+/** Navidad: desde el 1 de enero la decoración se apaga sola y Ajustes → Temporada vuelve a «Normal». */
+async function endChristmasIfOver(now = new Date()): Promise<boolean> {
+  if ((await getSettings()).seasonTheme !== "navidad" || !christmasOver(now)) return false;
+  await saveSettings({ seasonTheme: "" });
+  await audit({ actorId: null, action: "settings.season_ended", entity: "Setting", data: { seasonTheme: "navidad → normal" } });
+  return true;
 }

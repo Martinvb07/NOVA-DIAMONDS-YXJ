@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { isSeasonalImage } from "@/domain/season";
 
 export type Banner = { id: string; title: string; imageUrl: string; imageMobileUrl?: string | null; href: string | null };
 
@@ -33,7 +34,13 @@ export function BannerPicture({ b, sizes, priority, mobile, className }: { b: Ba
 }
 
 function BannerLink({ b, className, sizes, priority, mobile = false }: { b: Banner; className: string; sizes: string; priority?: boolean; mobile?: boolean }) {
-  const img = <BannerPicture b={b} sizes={sizes} priority={priority} mobile={mobile} className="object-cover transition-transform duration-500 group-hover:scale-[1.03]" />;
+  // Navidad: los banners subidos al panel llevan nieve en el borde; los de la marca ya tienen su versión navideña.
+  const img = (
+    <>
+      <BannerPicture b={b} sizes={sizes} priority={priority} mobile={mobile} className="object-cover transition-transform duration-500 group-hover:scale-[1.03]" />
+      {!isSeasonalImage(b.imageUrl) && <span aria-hidden className="season-cap" />}
+    </>
+  );
   const cls = cn("group relative block shrink-0 overflow-hidden rounded-[18px] ring-1 ring-white/[0.08] transition-shadow hover:ring-white/20", className);
   if (!b.href) return <div className={cls}>{img}</div>;
   if (b.href.startsWith("http"))

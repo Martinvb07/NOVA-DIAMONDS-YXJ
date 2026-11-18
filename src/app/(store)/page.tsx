@@ -3,6 +3,7 @@ import { ChevronRight, ClipboardList, CreditCard, Gem as GemIcon, LifeBuoy, Rada
 import { JsonLd } from "@/components/seo/json-ld";
 import { AccountGridCard } from "@/components/store/account-listing";
 import { HeroCarousel } from "@/components/store/hero-carousel";
+import { currentSeason, seasonalBanner, seasonBanner } from "@/domain/season";
 import { DiamondCover, tierFor } from "@/components/brand/covers";
 import { RankEmblem } from "@/components/brand/rank-emblem";
 import { ProductTile } from "@/components/store/product-tile";
@@ -56,6 +57,11 @@ export default async function HomePage() {
   const bonusPct = packages[0]?.diamonds ? Math.round((packages[0].bonusDiamonds / packages[0].diamonds) * 100) : 0;
   const rankChips = [...FF_RANKS].reverse().filter((r) => facets.rankCounts[r.id]);
 
+  // Carrusel: en Navidad el banner navideño va de primero y los del panel se ven en su versión navideña.
+  const seasonNow = currentSeason(settings.seasonTheme);
+  const xmas = seasonBanner(seasonNow);
+  const banners = [...(xmas ? [xmas] : []), ...heroBanners.map((b) => seasonalBanner(b, seasonNow))];
+
   return (
     <>
       <JsonLd
@@ -72,7 +78,7 @@ export default async function HomePage() {
 
       <Container className="space-y-8 pb-2 pt-4 sm:space-y-12 sm:pb-6 sm:pt-7">
         <div className="space-y-5">
-          {heroBanners.length > 0 && <HeroCarousel banners={heroBanners} />}
+          {banners.length > 0 && <HeroCarousel banners={banners} />}
 
           {/* Accesos rápidos */}
           {/* Celular: fila deslizable de íconos tipo app. Escritorio: rejilla de tarjetas. */}

@@ -99,6 +99,15 @@ export default async function SettingsAdmin() {
           </div>
         </Panel>
 
+        <Panel title="Temporada">
+          <Field label="Decoración" hint="Navidad: luces, nieve, estrella en el logo, adornos en los paquetes, banners navideños y paisaje de invierno. Se apaga sola el 1 de enero.">
+            <Select name="seasonTheme" defaultValue={s.seasonTheme === "navidad" ? "navidad" : ""} className="field">
+              <option value="">Normal (diseño de siempre)</option>
+              <option value="navidad">Navidad</option>
+            </Select>
+          </Field>
+        </Panel>
+
         <Panel title="Sección de cuentas">
           <p className="mb-3 text-[12.5px] text-fg-muted">
             Controla si la tienda muestra la venta de cuentas (menú, inicio, buscador y catálogo). Ahora hay {publicAccounts} cuenta(s) publicada(s).

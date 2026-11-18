@@ -1,0 +1,20 @@
+// Banners de la marca que tienen versión navideña en public/promo/nova/navidad (scripts/banners-nova.py … navidad).
+export const NAVIDAD_BANNERS: ReadonlySet<string> = new Set([
+  "/promo/nova/codigos.webp",
+  "/promo/nova/garantia-wide.webp",
+  "/promo/nova/garantia.webp",
+  "/promo/nova/hero-bonus.webp",
+  "/promo/nova/hero-codigos.webp",
+  "/promo/nova/hero-nequi.webp",
+  "/promo/nova/hero-pagos.webp",
+  "/promo/nova/m/garantia.webp",
+  "/promo/nova/m/hero-bonus.webp",
+  "/promo/nova/m/hero-codigos.webp",
+  "/promo/nova/m/hero-nequi.webp",
+  "/promo/nova/m/hero-pagos.webp",
+  "/promo/nova/m/pasos.webp",
+  "/promo/nova/m/sinclaves.webp",
+  "/promo/nova/pasos-wide.webp",
+  "/promo/nova/sinclaves-wide.webp",
+  "/promo/nova/soporte.webp",
+]);

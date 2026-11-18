@@ -20,7 +20,11 @@ export function Logo({ name, logoUrl, className }: { name: string; logoUrl?: str
   }
   return (
     <span className={cn("inline-flex items-center gap-2", className)}>
-      <LogoMark className="h-9 drop-shadow-[0_0_10px_rgb(41_168_255/0.3)] sm:h-10" />
+      <span className="relative inline-flex">
+        <LogoMark className="h-9 drop-shadow-[0_0_10px_rgb(41_168_255/0.3)] sm:h-10" />
+        {/* Navidad: estrella nova sobre el YXJ (fondo de globals.css, solo en temporada; fuera de ella no se descarga). */}
+        <span aria-hidden className="season-star pointer-events-none absolute -right-[18%] -top-[30%] aspect-square w-[42%]" />
+      </span>
       <span className="whitespace-nowrap font-brand text-[16px] font-black uppercase tracking-[0.04em] text-fg sm:text-[18px]">Nova Diamonds</span>
       <span className="sr-only">{name}</span>
     </span>

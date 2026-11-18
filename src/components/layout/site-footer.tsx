@@ -82,6 +82,8 @@ export function SiteFooter({ settings, payments, showAccounts = true }: { settin
       <Container className="relative">
         {/* Llamado a la acción: mismo estilo que los banners (grafiti YXJ de fondo y diamante oficial) */}
         <div className="relative -mb-2 mt-8 overflow-hidden rounded-[22px] bg-[radial-gradient(70%_120%_at_80%_50%,rgba(41,168,255,0.28),transparent_70%),radial-gradient(50%_100%_at_0%_100%,rgba(139,108,255,0.22),transparent_70%),linear-gradient(160deg,#081430,#03060e_70%)] p-6 ring-1 ring-nova-400/25 sm:mt-12 sm:p-8">
+          {/* Navidad: nieve en el borde (fondo de globals.css) */}
+          <span aria-hidden className="season-cap" />
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/brand/nova-yxj.png" alt="" aria-hidden className="pointer-events-none absolute -right-6 -top-10 h-[150%] w-auto rotate-[-9deg] opacity-20 drop-shadow-[0_0_30px_rgba(41,168,255,0.6)]" />
           <Gem className="pointer-events-none absolute -right-6 -top-4 w-36 sm:right-16 sm:top-1/2 sm:w-52 sm:-translate-y-1/2" />

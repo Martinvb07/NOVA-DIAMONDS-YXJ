@@ -347,3 +347,56 @@
   background-clip: text;
   color: transparent;
 }
+
+/* ------------------------------------------------------------------
+   Navidad de cristal (Panel → Ajustes → Temporada; src/components/store/navidad.tsx). Solo con data-season="navidad":
+   en «Normal» nada de esto se ve ni se descarga (las imágenes son fondos que solo existen dentro del selector).
+   ------------------------------------------------------------------ */
+.season-cap { position: absolute; inset-inline: 0; top: 0; height: 12px; pointer-events: none; z-index: 2; }
+[data-season="navidad"] .season-cap { background: url("/temporada/nieve-borde.svg") 50% 0 / 100% 100% no-repeat; }
+/* Portadas de los paquetes: borde de nieve arriba y una esfera de cristal colgando a la derecha. */
+[data-season="navidad"] .season-cover {
+  background:
+    url("/temporada/esfera.svg") right 7% top 0 / 13% auto no-repeat,
+    url("/temporada/nieve-borde.svg") 50% 0 / 100% 7% no-repeat;
+}
+/* Estrella nova sobre el isotipo YXJ del logo. */
+[data-season="navidad"] .season-star { background: url("/temporada/estrella.svg") center / contain no-repeat; animation: xmas-twinkle 3.2s ease-in-out infinite; }
+@keyframes xmas-twinkle { 0%, 100% { opacity: 1; transform: scale(1) rotate(0deg); } 50% { opacity: 0.75; transform: scale(0.88) rotate(10deg); } }
+/* Títulos de página con la estrella nova delante. */
+[data-season="navidad"] main :is(h1:not(.sr-only), .xmas-title)::before {
+  content: "";
+  display: inline-block;
+  width: 0.8em;
+  height: 0.8em;
+  margin-right: 0.35em;
+  vertical-align: -0.05em;
+  background: url("/temporada/estrella.svg") center / contain no-repeat;
+}
+/* Aurora: halo azul y violeta detrás de todo, que respira despacio. */
+.xmas-aurora {
+  background:
+    radial-gradient(60% 40% at 15% 0%, rgba(94, 231, 255, 0.12), transparent 70%),
+    radial-gradient(55% 45% at 85% 5%, rgba(139, 108, 255, 0.14), transparent 70%),
+    radial-gradient(40% 30% at 50% 100%, rgba(255, 211, 107, 0.06), transparent 70%);
+  animation: xmas-breathe 10s ease-in-out infinite alternate;
+}
+@keyframes xmas-breathe { from { opacity: 0.7; } to { opacity: 1; } }
+.xmas-lights-row { background: url("/temporada/luces-cable.svg") 50% 0 / auto 100% repeat-x; }
+.xmas-bulbs { position: absolute; inset: 0; background-position: 50% 0; background-size: auto 100%; background-repeat: repeat-x; animation: xmas-blink 3.6s ease-in-out infinite; will-change: opacity; }
+.xmas-bulbs-1 { background-image: url("/temporada/luces-1.svg"); }
+.xmas-bulbs-2 { background-image: url("/temporada/luces-2.svg"); animation-delay: -1.2s; }
+.xmas-bulbs-3 { background-image: url("/temporada/luces-3.svg"); animation-delay: -2.4s; }
+@keyframes xmas-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+.xmas-snow-a, .xmas-snow-b { position: absolute; inset-inline: 0; bottom: 0; background-repeat: repeat; will-change: transform; }
+.xmas-snow-a { top: -560px; background-image: url("/temporada/nieve-a.svg"); background-size: 560px 560px; animation: xmas-snow-a 34s linear infinite; opacity: 0.8; }
+.xmas-snow-b { top: -800px; background-image: url("/temporada/nieve-b.svg"); background-size: 800px 800px; animation: xmas-snow-b 60s linear infinite; opacity: 0.6; }
+.xmas-sway { position: absolute; inset: -40px; will-change: transform; animation: xmas-sway 10s ease-in-out infinite alternate; }
+.xmas-sway-b { animation-duration: 14s; animation-delay: -5s; }
+@keyframes xmas-sway { from { transform: translate3d(-16px, 0, 0); } to { transform: translate3d(16px, 0, 0); } }
+@keyframes xmas-snow-a { to { transform: translate3d(0, 560px, 0); } }
+@keyframes xmas-snow-b { to { transform: translate3d(0, 800px, 0); } }
+@media (prefers-reduced-motion: reduce) {
+  .xmas-bulbs, .xmas-aurora, [data-season="navidad"] .season-star { animation: none; }
+  .xmas-snow { display: none; }
+}

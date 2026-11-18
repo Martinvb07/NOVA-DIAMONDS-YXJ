@@ -5,7 +5,7 @@
 - Cada emblema «V» → isotipo YXJ.
 - Títulos en Orbitron (la letra del logo) y textos en Inter, incrustados al exportar.
 
-Uso: python3 scripts/banners-nova.py <carpeta promo de vanta> <carpeta de trabajo>
+Uso: python3 scripts/banners-nova.py <carpeta promo de vanta> <carpeta de trabajo> [navidad]
 Escribe en la carpeta de trabajo un HTML por banner y lista.json; scripts/banners-nova.js los exporta a WebP.
 """
 import base64
@@ -85,11 +85,64 @@ ITEMS = [  # archivo de vanta, salida
     ("m/sinclaves.svg", "m/sinclaves"),
 ]
 
+# Navidad de cristal (tercer argumento «navidad»): mismos banners con cable de luces arriba, copos de cristal, nieve
+# en el borde de abajo, rayos dorados en el destello y un banner propio «Feliz Navidad» (hero-navidad).
+NAVIDAD = len(sys.argv) > 3 and sys.argv[3] == "navidad"
+TEMP = (ROOT / "public/temporada").as_uri()
+
+XMAS_TEXT = {  # textos del banner «Feliz Navidad», a partir de hero-bonus
+    ">FREE FIRE<": ">YXJ NOVA<",
+    ">+10%<": ">FELIZ<",
+    ">DE BONUS<": ">NAVIDAD<",
+    ">EN TODOS LOS PAQUETES DE DIAMANTES<": ">REGALA DIAMANTES DIRECTO A SU ID<",
+    ">RECARGA POR ID  →<": ">REGALAR  →<",
+}
+
+
+def xmas_overlay(w, h, hero):
+    """Capa navideña encima del banner (en proporción al alto, así sirve en todos los tamaños)."""
+    lights = round(h * (0.15 if w > h else 0.1))
+    snow = round(h * 0.09)
+    deco = ""
+    if hero:  # banner «Feliz Navidad»: estrella nova sobre el cofre y esferas de cristal colgando de las luces
+        wide = w > h * 2
+        sx, sy, ss = (w * 0.782, h * 0.02, h * 0.2) if wide else (w * 0.6, h * 0.0, h * 0.13)
+        deco += f'<img src="{TEMP}/estrella.svg" style="position:absolute;left:{sx - ss / 2:.0f}px;top:{sy:.0f}px;width:{ss:.0f}px">'
+        for fx, fh in ((0.6, 0.34), (0.66, 0.24), (0.95, 0.3)) if wide else ((0.3, 0.2), (0.88, 0.24)):
+            eh = h * fh
+            deco += f'<img src="{TEMP}/esfera.svg" style="position:absolute;left:{w * fx - eh / 3:.0f}px;top:{lights * 0.35:.0f}px;height:{eh:.0f}px">'
+
+    return (
+        f'<div style="position:absolute;inset:0;pointer-events:none;'
+        f'background:url({TEMP}/nieve-a.svg) 0 0/{round(h * 1.1)}px,url({TEMP}/nieve-b.svg) 30% 20%/{round(h * 1.6)}px;opacity:.8"></div>'
+        f'<div style="position:absolute;left:0;right:0;top:0;height:{lights}px;'
+        f'background:url({TEMP}/luces-1.svg) 0 0/auto 100% repeat-x,url({TEMP}/luces-2.svg) 0 0/auto 100% repeat-x,'
+        f'url({TEMP}/luces-3.svg) 0 0/auto 100% repeat-x,url({TEMP}/luces-cable.svg) 0 0/auto 100% repeat-x"></div>'
+        f'<div style="position:absolute;left:0;right:0;bottom:-2px;height:{snow}px;transform:scaleY(-1);'
+        f'background:url({TEMP}/nieve-borde.svg) 0 0/{round(snow * 18)}px 100% repeat-x"></div>' + deco
+    )
+
+
+def xmas_svg(s, hero):
+    if hero:
+        for a, b in XMAS_TEXT.items():
+            s = s.replace(a, b)
+        s = s.replace('fill="#29b6ff">FELIZ<', 'fill="#ffd36b">FELIZ<')
+    # Rayos violeta del destello → dorados (luz de Navidad), y estrella nova sobre el arte.
+    return s.replace('stop-color="#a48bff"', 'stop-color="#ffd36b"').replace('stop-color="#6d4dff"', 'stop-color="#ffb72e"')
+
+
+jobs = [(src, out, False) for src, out in ITEMS]
+if NAVIDAD:
+    jobs += [("hero-bonus.svg", "hero-navidad", True), ("m/hero-bonus.svg", "m/hero-navidad", True)]
+
 lista = []
-for src, out in ITEMS:
+for src, out, hero in jobs:
     s = (SRC / src).read_text(encoding="utf-8")
     w, h = (int(float(x)) for x in re.search(r'viewBox="0 0 ([\d.]+) ([\d.]+)"', s).groups())
     s = convert(s, w, h)
+    if NAVIDAD:
+        s = xmas_svg(s, hero) + xmas_overlay(w, h, hero)
     name = out.replace("/", "-")
     (WORK / f"{name}.html").write_text(PAGE.format(orb=FONTS["orbitron"], inter=FONTS["inter"], w=w, h=h, svg=s), encoding="utf-8")
     lista.append({"name": name, "w": w, "h": h, "out": f"{out}.webp"})
